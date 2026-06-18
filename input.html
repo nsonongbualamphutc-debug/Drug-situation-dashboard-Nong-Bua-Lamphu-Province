@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กรอกข้อมูลสถานการณ์ยาเสพติด • หนองบัวลำภู</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15233b; --ink2:#33425e; --line:#dfe5ef; --bg:#eef1f6; --card:#ffffff;
+    --primary:#1f3a8a; --primary-d:#16296b;
+    --enf:#c0392b; --enfbg:#fdecea; --tx:#0e8a6b; --txbg:#e7f6f0; --watch:#b8860b;
+    --muted:#6b7689; --ok:#0e8a6b; --err:#c0392b;
+    --radius:14px; --shadow:0 1px 3px rgba(20,35,59,.08),0 8px 24px rgba(20,35,59,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:'Sarabun',sans-serif;color:var(--ink);
+       background-image:radial-gradient(circle at 100% 0,#e3e9f5 0,transparent 40%);min-height:100vh}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+  header.top{display:flex;align-items:center;gap:14px;margin:6px 0 22px}
+  .crest{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--enf));
+          display:grid;place-items:center;color:#fff;font-family:'Kanit';font-weight:700;font-size:20px;box-shadow:var(--shadow)}
+  header.top h1{font-family:'Kanit';font-weight:600;font-size:1.25rem;margin:0;line-height:1.25}
+  header.top p{margin:2px 0 0;color:var(--muted);font-size:.85rem}
+  .link{margin-left:auto;font-size:.85rem;color:var(--primary);text-decoration:none;font-weight:600;
+        border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-bottom:18px}
+  .card h2{font-family:'Kanit';font-weight:600;font-size:1.02rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .card .sub{color:var(--muted);font-size:.82rem;margin:0 0 16px}
+  .grid{display:grid;gap:14px}
+  .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
+  @media(max-width:480px){.g4,.g3,.g2{grid-template-columns:1fr}}
+  label{display:block;font-size:.8rem;font-weight:600;color:var(--ink2);margin-bottom:6px}
+  label .hint{font-weight:400;color:var(--muted)}
+  select,input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;
+               font-size:.95rem;background:#fff;color:var(--ink);transition:border .15s,box-shadow .15s}
+  select:focus,input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(31,58,138,.12)}
+  input[type=number]{font-variant-numeric:tabular-nums}
+  .sectiontag{display:inline-flex;align-items:center;gap:7px;font-family:'Kanit';font-weight:600;font-size:.9rem;
+              padding:6px 12px;border-radius:8px;margin:8px 0 14px}
+  .tag-enf{background:var(--enfbg);color:var(--enf)} .tag-tx{background:var(--txbg);color:var(--tx)}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .btnbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
+  .btn{font-family:'Kanit';font-weight:600;font-size:.95rem;padding:12px 26px;border-radius:11px;border:none;cursor:pointer;transition:.15s}
+  .btn-primary{background:var(--primary);color:#fff} .btn-primary:hover{background:var(--primary-d)}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink2)} .btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .status{font-size:.85rem;font-weight:600}
+  .status.ok{color:var(--ok)} .status.err{color:var(--err)} .status.muted{color:var(--muted)}
+  .pill{display:inline-block;font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:20px;background:#eef1f6;color:var(--muted)}
+  .pill.exist{background:#fff4e0;color:var(--watch)}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  thead th{background:#f6f8fc;color:var(--ink2);font-weight:600;position:sticky;top:0}
+  tbody tr:hover{background:#f9fbff;cursor:pointer}
+  .tablewrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:12px}
+  .empty{padding:30px;text-align:center;color:var(--muted)}
+  .req::after{content:" *";color:var(--enf)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="crest">นภ</div>
+    <div>
+      <h1>ระบบกรอกข้อมูลสถานการณ์ยาเสพติด</h1>
+      <p>จังหวัดหนองบัวลำภู • รายงานรายสัปดาห์ตามแผนปฏิบัติการ (Action Plan)</p>
+    </div>
+    <a class="link" href="index.html">📊 ดูแดชบอร์ด</a>
+  </header>
+
+  <!-- ตัวเลือกช่วงเวลา -->
+  <div class="card">
+    <h2>① เลือกช่วงเวลาและพื้นที่ <span id="existPill"></span></h2>
+    <p class="sub">เลือกแล้วระบบจะดึงข้อมูลเดิมที่เคยกรอกของสัปดาห์นั้นมาแสดงให้แก้ไขโดยอัตโนมัติ — บันทึกซ้ำคือเขียนทับ (ไม่ทบยอด)</p>
+    <div class="grid g4">
+      <div><label class="req">ปี (พ.ศ.)</label><select id="f_year"></select></div>
+      <div><label class="req">เดือน</label><select id="f_month"></select></div>
+      <div><label class="req">สัปดาห์ที่</label><select id="f_week"></select></div>
+      <div><label class="req">อำเภอ</label><select id="f_district"></select></div>
+    </div>
+  </div>
+
+  <!-- ด้านปราบปราม -->
+  <div class="card">
+    <span class="sectiontag tag-enf"><span class="dot"></span>ด้านการปราบปราม / จับกุม</span>
+    <div class="grid g3">
+      <div><label>จำนวนคดี <span class="hint">(คดี)</span></label><input id="d_cases" type="number" min="0" value="0"></div>
+      <div><label>ผู้ต้องหา <span class="hint">(คน)</span></label><input id="d_suspects" type="number" min="0" value="0"></div>
+      <div><label>ผู้ค้ารายสำคัญที่จับกุม <span class="hint">(ราย • เทียบเป้า 511)</span></label><input id="d_dealers" type="number" min="0" value="0"></div>
+      <div><label>ยาบ้า <span class="hint">(เม็ด)</span></label><input id="d_methPills" type="number" min="0" value="0"></div>
+      <div><label>ยาไอซ์ <span class="hint">(กรัม)</span></label><input id="d_iceGrams" type="number" min="0" step="0.01" value="0"></div>
+    </div>
+  </div>
+
+  <!-- ด้านบำบัด -->
+  <div class="card">
+    <span class="sectiontag tag-tx"><span class="dot"></span>ด้านการบำบัดฟื้นฟู / สาธารณสุข</span>
+    <div class="grid g4">
+      <div><label>นำเข้าสู่การบำบัด <span class="hint">(คน • เทียบเป้า 2,415)</span></label><input id="d_intoTreatment" type="number" min="0" value="0"></div>
+      <div><label>ผ่าน/สำเร็จการบำบัด <span class="hint">(คน)</span></label><input id="d_completedTreatment" type="number" min="0" value="0"></div>
+      <div><label>ค้นหา/คัดกรอง (Re-X-ray) <span class="hint">(คน)</span></label><input id="d_xray" type="number" min="0" value="0"></div>
+      <div><label>ผู้มีอาการจิตเวช (SMI-V) <span class="hint">(คน)</span></label><input id="d_psychiatric" type="number" min="0" value="0"></div>
+    </div>
+    <div style="margin-top:14px"><label>หมายเหตุ / เหตุการณ์สำคัญในสัปดาห์</label>
+      <input id="d_notes" type="text" placeholder="เช่น จับกุมเครือข่ายรายสำคัญพื้นที่ตำบล... / ปิดล้อมตรวจค้น ฯลฯ"></div>
+  </div>
+
+  <!-- บันทึก -->
+  <div class="card">
+    <h2>② ยืนยันการบันทึก</h2>
+    <div class="grid g2" style="margin-bottom:12px">
+      <div><label>ชื่อผู้กรอก <span class="hint">(บันทึกในประวัติ)</span></label><input id="d_user" type="text" placeholder="ชื่อ-สกุล / หน่วยงาน"></div>
+      <div><label class="req">PIN เจ้าหน้าที่</label><input id="d_pin" type="password" placeholder="••••••" autocomplete="off"></div>
+    </div>
+    <div class="btnbar">
+      <button class="btn btn-primary" id="saveBtn" onclick="save()">💾 บันทึกข้อมูลสัปดาห์นี้</button>
+      <button class="btn btn-ghost" onclick="loadOne()">↻ ดึงข้อมูลเดิม</button>
+      <button class="btn btn-ghost" onclick="clearForm()">ล้างฟอร์ม</button>
+      <span class="status muted" id="status">พร้อมใช้งาน</span>
+    </div>
+  </div>
+
+  <!-- ตารางข้อมูลล่าสุด -->
+  <div class="card">
+    <h2>③ ข้อมูลที่กรอกล่าสุด <span class="pill" id="countPill">0 รายการ</span></h2>
+    <p class="sub">คลิกแถวเพื่อดึงข้อมูลขึ้นมาแก้ไข</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>ช่วงเวลา</th><th>อำเภอ</th><th>คดี</th><th>ผู้ต้องหา</th><th>ผู้ค้า</th>
+          <th>ยาบ้า</th><th>ไอซ์(ก.)</th><th>บำบัด</th><th>สำเร็จ</th><th>อัปเดต</th>
+        </tr></thead>
+        <tbody id="tbody"><tr><td colspan="10" class="empty">— ยังไม่มีข้อมูล —</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====== ตั้งค่า ====== */
+const API = 'https://script.google.com/macros/s/AKfycbznWom8v4aRLQdHWFj6SAw-TfcPcyBhQFkpBzvYR3TM5GCvXWbRToAd_tA6YGLSvJZN/exec';
+const DISTRICTS = ['เมืองหนองบัวลำภู','ศรีบุญเรือง','นากลาง','โนนสัง','สุวรรณคูหา','นาวัง'];
+const MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const FIELDS = ['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric'];
+let ALLROWS = [];
+
+/* ====== JSONP ====== */
+function jsonp(params){
+  return new Promise((res,rej)=>{
+    const cb='cb_'+Math.random().toString(36).slice(2);
+    const q=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+    const s=document.createElement('script');
+    let done=false;
+    window[cb]=(d)=>{done=true;res(d);cleanup();};
+    function cleanup(){delete window[cb];s.remove();}
+    s.onerror=()=>{if(!done){rej(new Error('เชื่อมต่อไม่สำเร็จ'));cleanup();}};
+    s.src=API+'?'+q+'&callback='+cb;
+    document.body.appendChild(s);
+    setTimeout(()=>{if(!done){rej(new Error('หมดเวลา (timeout)'));cleanup();}},20000);
+  });
+}
+
+/* ====== init ====== */
+function fillSelect(el,arr,valuer,labeler){el.innerHTML=arr.map(v=>`<option value="${valuer(v)}">${labeler(v)}</option>`).join('');}
+function initUI(){
+  const yNow = new Date().getFullYear()+543;
+  const years=[yNow-1,yNow,yNow+1];
+  fillSelect(f_year,years,v=>v,v=>v);
+  f_year.value=yNow;
+  fillSelect(f_month,MONTHS.map((m,i)=>({i:i+1,m})),v=>v.i,v=>v.m);
+  f_month.value=new Date().getMonth()+1;
+  fillSelect(f_week,[1,2,3,4,5],v=>v,v=>'สัปดาห์ที่ '+v);
+  fillSelect(f_district,DISTRICTS,v=>v,v=>v);
+  [f_year,f_month,f_week,f_district].forEach(el=>el.addEventListener('change',loadOne));
+}
+const $=id=>document.getElementById(id);
+const f_year=$('f_year'),f_month=$('f_month'),f_week=$('f_week'),f_district=$('f_district');
+
+/* ====== โหลดข้อมูลทั้งหมด + ตาราง ====== */
+async function loadAll(){
+  setStatus('กำลังโหลด...','muted');
+  try{
+    const d=await jsonp({action:'getData'});
+    if(d.ok){ALLROWS=d.rows||[];renderTable();setStatus('พร้อมใช้งาน','muted');}
+    else setStatus('โหลดไม่สำเร็จ: '+d.error,'err');
+  }catch(e){setStatus('⚠ '+e.message+' (ตรวจสอบ URL API)','err');}
+}
+function renderTable(){
+  $('countPill').textContent=ALLROWS.length+' รายการ';
+  if(!ALLROWS.length){$('tbody').innerHTML='<tr><td colspan="10" class="empty">— ยังไม่มีข้อมูล —</td></tr>';return;}
+  const sorted=[...ALLROWS].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  $('tbody').innerHTML=sorted.map(r=>`
+    <tr onclick='pick(${JSON.stringify(JSON.stringify(r))})'>
+      <td>${shortMonth(r.month)} ${r.year} • ส.${r.week}</td>
+      <td>${r.district}</td>
+      <td>${n(r.cases)}</td><td>${n(r.suspects)}</td><td>${n(r.dealers)}</td>
+      <td>${n(r.methPills)}</td><td>${n(r.iceGrams)}</td>
+      <td>${n(r.intoTreatment)}</td><td>${n(r.completedTreatment)}</td>
+      <td style="color:var(--muted)">${fmtTime(r.updatedAt)}</td>
+    </tr>`).join('');
+}
+function pick(js){const r=JSON.parse(JSON.parse(js));
+  f_year.value=r.year;f_month.value=r.month;f_week.value=r.week;f_district.value=r.district;
+  fillForm(r);window.scrollTo({top:0,behavior:'smooth'});}
+
+/* ====== prefill จาก local (เร็ว) + ยืนยันจาก server ====== */
+function currentKey(){return [f_year.value,f_month.value,'W'+f_week.value,f_district.value].join('|');}
+async function loadOne(){
+  const key=currentKey();
+  const local=ALLROWS.find(r=>r.id===key);
+  if(local){fillForm(local);markExist(true);}
+  else{clearValues();markExist(false);}
+}
+function fillForm(r){FIELDS.forEach(f=>$('d_'+f).value=r[f]??0);$('d_notes').value=r.notes||'';markExist(true);}
+function clearValues(){FIELDS.forEach(f=>$('d_'+f).value=0);$('d_notes').value='';}
+function clearForm(){clearValues();$('d_user').value='';markExist(false);setStatus('ล้างฟอร์มแล้ว','muted');}
+function markExist(yes){
+  $('existPill').innerHTML=yes
+    ?'<span class="pill exist">มีข้อมูลเดิม • กำลังแก้ไข</span>'
+    :'<span class="pill">รายการใหม่</span>';
+}
+
+/* ====== บันทึก ====== */
+async function save(){
+  const pin=$('d_pin').value.trim();
+  if(!pin){setStatus('กรุณากรอก PIN','err');$('d_pin').focus();return;}
+  $('saveBtn').disabled=true;setStatus('กำลังบันทึก...','muted');
+  const p={action:'save',year:f_year.value,month:f_month.value,week:f_week.value,district:f_district.value,
+           notes:$('d_notes').value,user:$('d_user').value||'-',pin};
+  FIELDS.forEach(f=>p[f]=$('d_'+f).value||0);
+  try{
+    const d=await jsonp(p);
+    if(d.ok){
+      setStatus(d.mode==='update'?'✓ แก้ไขข้อมูลเดิมเรียบร้อย':'✓ บันทึกรายการใหม่เรียบร้อย','ok');
+      await loadAll();markExist(true);
+    }else setStatus('✗ '+d.error,'err');
+  }catch(e){setStatus('⚠ '+e.message,'err');}
+  finally{$('saveBtn').disabled=false;}
+}
+
+/* ====== utils ====== */
+function n(v){return (Number(v)||0).toLocaleString('th-TH');}
+function shortMonth(m){return ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][m]||m;}
+function fmtTime(iso){if(!iso)return'-';const d=new Date(iso);return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});}
+function setStatus(t,c){const s=$('status');s.textContent=t;s.className='status '+(c||'muted');}
+
+initUI();loadAll();
+</script>
+</body>
+</html>

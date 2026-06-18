@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ศูนย์ข้อมูลสถานการณ์ยาเสพติด จังหวัดหนองบัวลำภู</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#10203f; --ink2:#3a4a66; --line:#e4e9f2; --bg:#eaeef6; --card:#ffffff; --soft:#f4f7fc;
+    --navy:#0f1d3d; --navy2:#1b2f5e;
+    --enf:#c0392b; --enfbg:#fdeceb; --tx:#0e8a6b; --txbg:#e6f6f0;
+    --watch:#cf8a1e; --watchbg:#fbf2dd; --seize:#2f6fb0; --seizebg:#e8f1fa;
+    --muted:#6c7689; --gold:#d8a64a;
+    --radius:18px; --shadow:0 1px 2px rgba(16,32,63,.06),0 12px 34px rgba(16,32,63,.08);
+    --ic:38px;
+  }
+  [data-theme="dark"]{
+    --ink:#e9edf6; --ink2:#aeb9cf; --line:#26324c; --bg:#0a1120; --card:#121c30; --soft:#18233a;
+    --navy:#0a1426; --navy2:#16264a;
+    --enf:#e8705f; --enfbg:#2b1a18; --tx:#3fc59b; --txbg:#11261f;
+    --watch:#e2b455; --watchbg:#2a2310; --seize:#5f9bd6; --seizebg:#13243a;
+    --muted:#8b97ae; --gold:#e0b75e;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 14px 34px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:'Sarabun',sans-serif;color:var(--ink);transition:.3s background,.3s color}
+  .wrap{max-width:1360px;margin:0 auto;padding:0 18px 72px}
+  .ic{width:1em;height:1em;flex:none;vertical-align:-.14em}
+  /* ===== HERO ===== */
+  .hero{background:
+        radial-gradient(120% 140% at 85% -10%,rgba(216,166,74,.22),transparent 45%),
+        radial-gradient(90% 120% at 0% 120%,rgba(192,57,43,.20),transparent 50%),
+        linear-gradient(135deg,var(--navy),var(--navy2));
+        color:#eef3ff;border-radius:0 0 26px 26px;padding:22px 26px 24px;margin-bottom:18px;
+        box-shadow:0 18px 40px rgba(15,29,61,.28);position:relative;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:0;background:
+        repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 46px);pointer-events:none}
+  .hbar{display:flex;align-items:center;gap:15px;flex-wrap:wrap;position:relative}
+  .crest{width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,#fff,#dfe7f7);
+          display:grid;place-items:center;color:var(--navy);font-family:'Kanit';font-weight:800;font-size:20px;
+          box-shadow:0 6px 18px rgba(0,0,0,.25);letter-spacing:-.5px}
+  .htxt h1{font-family:'Kanit';font-weight:700;font-size:1.5rem;margin:0;line-height:1.15;letter-spacing:-.01em}
+  .htxt p{margin:4px 0 0;color:#aebede;font-size:.85rem;display:flex;align-items:center;gap:7px}
+  .htools{margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .live{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;color:#cdd9f2;
+        background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:7px 13px;border-radius:30px}
+  .pulse{width:9px;height:9px;border-radius:50%;background:#36d39e;box-shadow:0 0 0 0 rgba(54,211,158,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(54,211,158,.5)}70%{box-shadow:0 0 0 9px rgba(54,211,158,0)}100%{box-shadow:0 0 0 0 rgba(54,211,158,0)}}
+  .hbtn{font-family:'Kanit';font-weight:600;font-size:.83rem;border:1px solid rgba(255,255,255,.18);
+        background:rgba(255,255,255,.07);color:#eaf0ff;padding:8px 14px;border-radius:11px;cursor:pointer;
+        text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:.15s;font-size:.84rem}
+  .hbtn .ic{font-size:1rem}
+  .hbtn:hover{background:rgba(255,255,255,.16)}
+  .hbtn.cta{background:var(--gold);color:#3a2a08;border-color:var(--gold)}
+  .hbtn.cta:hover{filter:brightness(1.07)}
+  /* ribbon headline */
+  .ribbon{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;position:relative}
+  .rcell{flex:1 1 150px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+         border-radius:13px;padding:11px 15px;backdrop-filter:blur(4px)}
+  .rcell .rl{font-size:.72rem;color:#a9bbe0;display:flex;align-items:center;gap:6px}
+  .rcell .rl .ic{font-size:.95rem;color:var(--gold)}
+  .rcell .rv{font-family:'Kanit';font-weight:700;font-size:1.32rem;margin-top:2px;font-variant-numeric:tabular-nums}
+  .rcell .ru{font-size:.7rem;color:#9fb1d8;font-weight:400}
+  /* ===== filters ===== */
+  .filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--card);border:1px solid var(--line);
+           border-radius:var(--radius);box-shadow:var(--shadow);padding:15px 18px;margin-bottom:18px}
+  .filters .fld{display:flex;flex-direction:column;gap:5px}
+  .filters label{font-size:.73rem;font-weight:600;color:var(--muted)}
+  .filters select{padding:9px 13px;border:1px solid var(--line);border-radius:11px;background:var(--soft);
+                  color:var(--ink);font-family:inherit;font-size:.9rem;min-width:150px}
+  .updtxt{margin-left:auto;font-size:.78rem;color:var(--muted);align-self:center;display:flex;align-items:center;gap:6px}
+  /* ===== AI ===== */
+  .ai{background:linear-gradient(135deg,#13234a,#21407e);color:#eaf0ff;border-radius:var(--radius);
+      box-shadow:var(--shadow);padding:22px 26px;margin-bottom:18px;position:relative;overflow:hidden}
+  [data-theme="dark"] .ai{background:linear-gradient(135deg,#0e1a33,#1a2e58)}
+  .ai::after{content:"";position:absolute;right:-30px;top:-40px;width:200px;height:200px;border-radius:50%;
+             background:radial-gradient(circle,rgba(216,166,74,.16),transparent 70%)}
+  .ai h2{font-family:'Kanit';font-weight:600;font-size:1.06rem;margin:0;display:flex;align-items:center;gap:10px}
+  .ai h2 .iccirc{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.13);display:grid;place-items:center}
+  .ai h2 .iccirc .ic{font-size:1.15rem;color:var(--gold)}
+  .ai .badge{font-size:.65rem;background:rgba(255,255,255,.16);padding:3px 10px;border-radius:20px;font-weight:500}
+  .ai .period{font-size:.8rem;opacity:.82;margin:6px 0 14px;padding-left:44px}
+  .ai .body{font-size:.96rem;line-height:1.78}
+  .ai .body b{color:#fff} .ai .hl{color:var(--gold);font-weight:600}
+  .ai .body .ln{display:block;margin:8px 0;padding-left:24px;position:relative}
+  .ai .body .ln::before{content:"";position:absolute;left:6px;top:9px;width:7px;height:7px;border-radius:50%;
+        background:#7fa0e6;box-shadow:0 0 0 3px rgba(127,160,230,.2)}
+  .ai .body .ln.warn::before{background:var(--gold);box-shadow:0 0 0 3px rgba(216,166,74,.25)}
+  .ai .copybtn{position:absolute;top:20px;right:22px;font-family:'Kanit';font-size:.78rem;font-weight:600;
+        background:rgba(255,255,255,.14);color:#fff;border:none;padding:8px 15px;border-radius:10px;cursor:pointer;
+        display:inline-flex;align-items:center;gap:6px}
+  .ai .copybtn:hover{background:rgba(255,255,255,.27)}
+  /* ===== KPI ===== */
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+  @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:430px){.kpis{grid-template-columns:1fr}}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+       padding:16px 17px;display:flex;gap:14px;align-items:flex-start;position:relative;overflow:hidden;transition:.2s}
+  .kpi:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(16,32,63,.1),0 18px 40px rgba(16,32,63,.1)}
+  .kpi .ibox{width:var(--ic);height:var(--ic);border-radius:12px;display:grid;place-items:center;flex:none}
+  .kpi .ibox .ic{font-size:1.3rem}
+  .kpi .kmain{flex:1;min-width:0}
+  .kpi .k-top{font-size:.8rem;color:var(--muted);font-weight:600;line-height:1.2}
+  .kpi .k-val{font-family:'Kanit';font-weight:700;font-size:1.7rem;line-height:1.15;margin:5px 0 1px;font-variant-numeric:tabular-nums}
+  .kpi .k-unit{font-size:.7rem;color:var(--muted);font-weight:400}
+  .kpi .k-delta{font-size:.74rem;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+  .up{color:var(--enf)} .down{color:var(--tx)} .flat{color:var(--muted)}
+  .i-enf{background:var(--enfbg);color:var(--enf)} .i-tx{background:var(--txbg);color:var(--tx)}
+  .i-watch{background:var(--watchbg);color:var(--watch)} .i-seize{background:var(--seizebg);color:var(--seize)}
+  /* ===== cards ===== */
+  .row{display:grid;gap:16px;margin-bottom:18px}
+  .row.r2{grid-template-columns:1.25fr 1fr} .row.r2b{grid-template-columns:1fr 1fr}
+  @media(max-width:980px){.row.r2,.row.r2b{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px}
+  .card h3{font-family:'Kanit';font-weight:600;font-size:1.02rem;margin:0;display:flex;align-items:center;gap:9px}
+  .card h3 .ic{font-size:1.2rem;color:var(--seize)}
+  .card .csub{color:var(--muted);font-size:.8rem;margin:3px 0 16px;padding-left:30px}
+  /* progress */
+  .goal{margin-bottom:20px}.goal:last-child{margin-bottom:0}
+  .goal .glabel{display:flex;justify-content:space-between;align-items:baseline;font-size:.88rem;margin-bottom:8px}
+  .goal .glabel .gname{font-weight:600;font-family:'Kanit';display:flex;align-items:center;gap:7px}
+  .goal .glabel .gnum{font-variant-numeric:tabular-nums;color:var(--muted)}
+  .goal .gnum b{color:var(--ink);font-size:1.08rem}
+  .track{height:14px;background:var(--soft);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+  .fill{height:100%;border-radius:20px;transition:width .7s cubic-bezier(.4,0,.2,1);position:relative}
+  .fill.enf{background:linear-gradient(90deg,#d9594b,#c0392b)} .fill.tx{background:linear-gradient(90deg,#23bf95,#0e8a6b)}
+  .fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+        background-size:40px 100%;background-repeat:no-repeat;animation:sheen 2.4s infinite}
+  @keyframes sheen{0%{background-position:-40px 0}100%{background-position:calc(100% + 40px) 0}}
+  .gpct{font-family:'Kanit';font-weight:700;font-size:.84rem;min-width:48px;text-align:right}
+  .mini{display:grid;grid-template-columns:110px 1fr auto;gap:11px;align-items:center;font-size:.79rem;margin-top:10px}
+  .mini .mname{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini .mtrack{height:8px;background:var(--soft);border-radius:10px;overflow:hidden}
+  .mini .mfill{height:100%;border-radius:10px}
+  /* notes feed */
+  .feed{display:flex;flex-direction:column;gap:11px;max-height:360px;overflow:auto}
+  .fitem{border:1px solid var(--line);border-radius:13px;padding:12px 14px;background:var(--soft);position:relative}
+  .fitem .fhead{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+  .chip{font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--enfbg);color:var(--enf);font-family:'Kanit'}
+  .fitem .fper{font-size:.72rem;color:var(--muted)} .fitem .ftxt{font-size:.88rem;line-height:1.5}
+  .fitem .fby{font-size:.71rem;color:var(--muted);margin-top:5px}
+  .feedempty{padding:30px;text-align:center;color:var(--muted)}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th,td{padding:9px 11px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:var(--soft);color:var(--ink2);font-weight:600;font-family:'Kanit';position:sticky;top:0}
+  tfoot td{font-weight:700;background:var(--soft);border-top:2px solid var(--line)}
+  tbody tr:hover{background:var(--soft)}
+  .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;max-height:440px}
+  .chartbox{position:relative;height:300px} .chartbox.tall{height:360px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .note{font-size:.76rem;color:var(--muted);margin-top:10px;line-height:1.5}
+  details{margin-bottom:18px}
+  details>summary{cursor:pointer;font-family:'Kanit';font-weight:600;font-size:.95rem;padding:14px 20px;
+        background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+        list-style:none;display:flex;align-items:center;gap:9px}
+  details>summary::-webkit-details-marker{display:none}
+  details>summary .ic{font-size:1.15rem;color:var(--seize)}
+  details[open]>summary{border-radius:14px 14px 0 0}
+  details .card{border-radius:0 0 14px 14px;border-top:none}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--card);
+         padding:11px 22px;border-radius:11px;font-size:.86rem;opacity:0;transition:.25s;z-index:50;pointer-events:none;font-weight:600}
+  .toast.show{opacity:1}
+  .loading{text-align:center;padding:70px;color:var(--muted)}
+  .spin{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--navy2);border-radius:50%;
+        margin:0 auto 14px;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+  .sechead{font-family:'Kanit';font-weight:700;font-size:1.1rem;margin:6px 2px 12px;display:flex;align-items:center;gap:9px;color:var(--ink)}
+  .sechead .ic{font-size:1.3rem;color:var(--enf)}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hbar">
+    <div class="crest">นภ</div>
+    <div class="htxt">
+      <h1>ศูนย์ข้อมูลสถานการณ์ยาเสพติด จังหวัดหนองบัวลำภู</h1>
+      <p><span id="sh_shield"></span> ศอ.ปส.จ.นภ. • รายงานสถานการณ์รายสัปดาห์ตามแผนปฏิบัติการ (Action Plan)</p>
+    </div>
+    <div class="htools">
+      <span class="live"><span class="pulse"></span><span id="liveTxt">กำลังเชื่อมต่อ…</span></span>
+      <button class="hbtn" onclick="refresh(true)"><span id="sh_refresh"></span>รีเฟรช</button>
+      <button class="hbtn" onclick="exportCSV()"><span id="sh_dl"></span>CSV</button>
+      <button class="hbtn" onclick="toggleTheme()" id="themeBtn"><span id="sh_moon"></span></button>
+      <a class="hbtn cta" href="input.html"><span id="sh_pen"></span>กรอกข้อมูล</a>
+    </div>
+  </div>
+  <div class="ribbon" id="ribbon"></div>
+</div>
+
+<div class="wrap">
+  <div class="filters">
+    <div class="fld"><label>ปีงบประมาณ (พ.ศ.)</label><select id="fl_year"></select></div>
+    <div class="fld"><label>ช่วงเวลา</label><select id="fl_month"></select></div>
+    <div class="fld"><label>อำเภอ</label><select id="fl_district"></select></div>
+    <span class="updtxt" id="updTxt">—</span>
+  </div>
+
+  <div id="content"><div class="card loading"><div class="spin"></div>กำลังโหลดข้อมูลจากระบบ…</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== ตั้งค่า ===================== */
+const API='https://script.google.com/macros/s/AKfycbznWom8v4aRLQdHWFj6SAw-TfcPcyBhQFkpBzvYR3TM5GCvXWbRToAd_tA6YGLSvJZN/exec';
+const REFRESH_MS=30000;
+
+const DISTRICTS=['เมืองหนองบัวลำภู','ศรีบุญเรือง','นากลาง','โนนสัง','สุวรรณคูหา','นาวัง'];
+const MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const SM=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+const TARGET={
+  dealers:{'เมืองหนองบัวลำภู':40,'ศรีบุญเรือง':194,'นากลาง':71,'โนนสัง':23,'สุวรรณคูหา':165,'นาวัง':18},
+  treat:  {'เมืองหนองบัวลำภู':45,'ศรีบุญเรือง':987,'นากลาง':258,'โนนสัง':90,'สุวรรณคูหา':999,'นาวัง':36}
+};
+const TARGET_SUM={dealers:511, treat:2415};
+const HIST={2567:{cases:1922,suspects:1977,meth:403427,ice:936.23},
+            2568:{cases:1427,suspects:1457,meth:221482,ice:13.54},
+            2569:{cases:1318,suspects:1345,meth:1040354,ice:95.28}};
+
+const FIELDS=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric'];
+let ALL=[],charts={};
+
+/* ===================== ไอคอน SVG (ธีมยาเสพติด) ===================== */
+const IC={
+ shield:'<path d="M12 2 4 6v6c0 5 3.4 8.3 8 10 4.6-1.7 8-5 8-10V6Z"/>',
+ cases:'<path d="M9 3.5h6a1.5 1.5 0 0 1 1.5 1.5H7.5A1.5 1.5 0 0 1 9 3.5Z"/><path d="M7 5h10v15a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1Z"/><path d="M10 11h4M10 15h4"/>',
+ suspect:'<circle cx="12" cy="8" r="3.3"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>',
+ dealer:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.6"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/>',
+ pill:'<rect x="2.8" y="9" width="18.4" height="6" rx="3" transform="rotate(45 12 12)"/><path d="m8.6 8.6 6.8 6.8"/>',
+ ice:'<path d="M12 2 4 7v10l8 5 8-5V7Z"/><path d="M12 2v20M4 7l16 10M20 7 4 17"/>',
+ treat:'<path d="M2.5 12.5H6l1.8-5 3.2 11 2.6-7.5L15.2 14H21.5"/>',
+ done:'<circle cx="12" cy="12" r="8.6"/><path d="m8.4 12.2 2.4 2.4 4.8-4.9"/>',
+ screen:'<circle cx="10.6" cy="10.6" r="6.2"/><path d="m19.5 19.5-4.4-4.4"/><path d="M8 10.6h5.2M10.6 8v5.2"/>',
+ brain:'<path d="M9.5 4.2A2.8 2.8 0 0 0 6 7a2.6 2.6 0 0 0-1.2 4.6A2.6 2.6 0 0 0 6 16a2.8 2.8 0 0 0 3.5 2.8Z"/><path d="M14.5 4.2A2.8 2.8 0 0 1 18 7a2.6 2.6 0 0 1 1.2 4.6A2.6 2.6 0 0 1 18 16a2.8 2.8 0 0 1-3.5 2.8Z"/><path d="M9.5 4.2V18.8M14.5 4.2V18.8"/>',
+ flag:'<path d="M5.5 21V3.8M5.5 4h11l-1.8 3.4L16.5 11h-11"/>',
+ chart:'<path d="M4 20V4M4 20h16"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12" y="7" width="3" height="10" rx="1"/><rect x="17" y="13" width="3" height="4" rx="1"/>',
+ building:'<path d="M4 21V6.2L12 3l8 3.2V21"/><path d="M9 21v-5h6v5"/><path d="M8 9h.4M12 9h.4M16 9h.4M8 13h.4M16 13h.4"/>',
+ scale:'<path d="M12 3.2v17.6M7.5 21h9"/><path d="M12 6 5.5 8.4 12 6l6.5 2.4Z"/><path d="M5.5 8.4 3 14.2a2.6 2.6 0 0 0 5 0Zm13 0L16 14.2a2.6 2.6 0 0 0 5 0Z"/>',
+ alert:'<path d="M10.3 4 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0Z"/><path d="M12 9.2v4M12 16.8h.01"/>',
+ ai:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.4"/>',
+ refresh:'<path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1L20.5 8"/><path d="M20.5 3v5h-5"/>',
+ dl:'<path d="M12 3.5v11m0 0 3.8-3.8M12 14.5 8.2 10.7"/><path d="M5 20.5h14"/>',
+ moon:'<path d="M20.5 13A8.5 8.5 0 1 1 11 3.5 6.6 6.6 0 0 0 20.5 13Z"/>',
+ sun:'<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5 5l1.6 1.6M17.4 17.4 19 19M19 5l-1.6 1.6M6.6 17.4 5 19"/>',
+ pen:'<path d="m14.5 4.5 4.9 4.9M4 20l1.2-4.4L16 4.9a1.6 1.6 0 0 1 2.3 0l1.9 1.9a1.6 1.6 0 0 1 0 2.3L9.4 18.8 4 20Z"/>',
+ note:'<path d="M5 3.5h10l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19Z"/><path d="M14.5 3.5V8H19"/><path d="M8.5 13h7M8.5 16.5h5"/>',
+ syringe:'<path d="m13 6 5 5M16 3l5 5-2 2-5-5ZM14 8 5 17l-2 4 4-2 9-9Z"/><path d="M11 11 9 9M14 8l-1.5-1.5"/>',
+ calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>'
+};
+function ic(n){return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${IC[n]||''}</svg>`;}
+function paintStatic(){
+  const m={sh_shield:'shield',sh_refresh:'refresh',sh_dl:'dl',sh_pen:'pen'};
+  for(const k in m)document.getElementById(k).innerHTML=ic(m[k]);
+  document.getElementById('sh_moon').innerHTML=ic(document.body.getAttribute('data-theme')==='dark'?'sun':'moon');
+}
+
+/* ===================== JSONP ===================== */
+function jsonp(params){return new Promise((res,rej)=>{
+  const cb='cb_'+Math.random().toString(36).slice(2);
+  const q=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+  const s=document.createElement('script');let done=false;
+  window[cb]=d=>{done=true;res(d);clean();};
+  function clean(){delete window[cb];s.remove();}
+  s.onerror=()=>{if(!done){rej(new Error('net'));clean();}};
+  s.src=API+'?'+q+'&callback='+cb;document.body.appendChild(s);
+  setTimeout(()=>{if(!done){rej(new Error('timeout'));clean();}},20000);
+});}
+
+/* ===================== โหลด ===================== */
+async function refresh(manual){
+  try{
+    const d=await jsonp({action:'getData'});
+    if(!d.ok)throw new Error(d.error||'error');
+    ALL=d.rows||[];setLive(true);
+    document.getElementById('updTxt').innerHTML=ic('refresh')+' อัปเดต '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    render();
+    if(manual)toast('รีเฟรชข้อมูลแล้ว');
+  }catch(e){
+    setLive(false);
+    if(!ALL.length)document.getElementById('content').innerHTML=
+      `<div class="card loading">${ic('alert')} เชื่อมต่อ API ไม่สำเร็จ<br><span style="font-size:.8rem">โปรดตรวจสอบการ Deploy Web app และสิทธิ์การเข้าถึง (Anyone)</span></div>`;
+    if(manual)toast('เชื่อมต่อไม่สำเร็จ');
+  }
+}
+function setLive(on){document.querySelector('.pulse').style.background=on?'#36d39e':'#e8705f';
+  document.getElementById('liveTxt').textContent=on?'Real-time • เชื่อมต่อแล้ว':'ออฟไลน์';}
+
+/* ===================== ตัวกรอง ===================== */
+function buildFilters(){
+  const years=[...new Set(ALL.map(r=>r.year))].sort((a,b)=>b-a);
+  if(!years.length)years.push(new Date().getFullYear()+543);
+  const fy=document.getElementById('fl_year');fy.innerHTML=years.map(y=>`<option>${y}</option>`).join('');
+  const fm=document.getElementById('fl_month');
+  fm.innerHTML='<option value="0">ทั้งปี (สะสมรายเดือน)</option>'+MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  const fd=document.getElementById('fl_district');
+  fd.innerHTML='<option value="all">ทุกอำเภอ</option>'+DISTRICTS.map(d=>`<option>${d}</option>`).join('');
+  [fy,fm,fd].forEach(el=>{if(!el.dataset.bound){el.addEventListener('change',render);el.dataset.bound=1;}});
+}
+function sel(){return{year:+document.getElementById('fl_year').value,
+                      month:+document.getElementById('fl_month').value,
+                      district:document.getElementById('fl_district').value};}
+function sum(rows){const o={};FIELDS.forEach(f=>o[f]=0);rows.forEach(r=>FIELDS.forEach(f=>o[f]+=Number(r[f])||0));return o;}
+function filt(y,m,d){return ALL.filter(r=>r.year===y&&(m===0||r.month===m)&&(d==='all'||r.district===d));}
+
+/* ===================== RENDER ===================== */
+function render(){
+  if(!document.getElementById('fl_year').options.length)buildFilters();
+  const s=sel();
+  const cur=filt(s.year,s.month,s.district),curSum=sum(cur);
+  let prevSum,prevLabel,curLabel;
+  if(s.month===0){const py=s.year-1;prevSum=sum(filt(py,0,s.district));prevLabel='ปี '+py;curLabel='ปี '+s.year;}
+  else{const pm=s.month-1;prevSum=pm>=1?sum(filt(s.year,pm,s.district)):sum([]);
+       prevLabel=pm>=1?SM[pm]+' '+s.year:'—';curLabel=MONTHS[s.month-1]+' '+s.year;}
+  const yearRows=filt(s.year,0,s.district),ySum=sum(yearRows);
+
+  renderRibbon(curSum,curLabel);
+
+  document.getElementById('content').innerHTML=`
+    ${aiSummary(s,curSum,prevSum,curLabel,prevLabel,ySum,cur)}
+    <div class="sechead">${ic('chart')} ตัวชี้วัดภาพรวม — ${curLabel}${s.district!=='all'?' • '+s.district:''}</div>
+    ${kpiCards(curSum,prevSum)}
+    <div class="row r2">${goalCard(s,yearRows)}${trendCard(s)}</div>
+    <div class="row r2b">${districtChartCard(s)}${notesCard(s)}</div>
+    <div class="row r2b">${typeCompareCard()}${histCard()}</div>
+    ${tableCard(s)}
+    ${rawCard()}
+  `;
+  drawTrend(s);drawDistrict(s);drawType(curSum);
+}
+
+function renderRibbon(c,label){
+  const cells=[
+    ['cases','คดีจับกุม',c.cases,'คดี'],
+    ['suspect','ผู้ต้องหา',c.suspects,'คน'],
+    ['dealer','ผู้ค้ารายสำคัญ',c.dealers,'ราย'],
+    ['treat','นำเข้าบำบัด',c.intoTreatment,'คน'],
+    ['pill','ยาบ้า',c.methPills,'เม็ด'],
+    ['ice','ยาไอซ์',c.iceGrams,'กรัม']
+  ];
+  document.getElementById('ribbon').innerHTML=cells.map(([i,l,v,u])=>
+    `<div class="rcell"><div class="rl">${ic(i)} ${l}</div><div class="rv">${nf(v)} <span class="ru">${u}</span></div></div>`).join('');
+}
+
+/* ---------- KPI ---------- */
+function delta(c,p){if(!p)return{t:c>0?'ข้อมูลใหม่':'—',c:'flat',a:''};const d=(c-p)/p*100;
+  return{t:Math.abs(d).toFixed(1)+'%',c:d>0?'up':d<0?'down':'flat',a:d>0?'▲':d<0?'▼':'—'};}
+function kpi(icon,tone,label,unit,val,prev){
+  const dd=delta(val,prev);
+  return`<div class="kpi"><div class="ibox i-${tone}">${ic(icon)}</div>
+    <div class="kmain"><div class="k-top">${label}</div>
+    <div class="k-val">${nf(val)} <span class="k-unit">${unit}</span></div>
+    <div class="k-delta ${dd.c}">${dd.a} ${dd.t}</div></div></div>`;
+}
+function kpiCards(c,p){return`<div class="kpis">
+  ${kpi('cases','enf','คดีจับกุม','คดี',c.cases,p.cases)}
+  ${kpi('suspect','enf','ผู้ต้องหา','คน',c.suspects,p.suspects)}
+  ${kpi('dealer','watch','ผู้ค้ารายสำคัญ','ราย',c.dealers,p.dealers)}
+  ${kpi('pill','seize','ยาบ้า','เม็ด',c.methPills,p.methPills)}
+  ${kpi('ice','seize','ยาไอซ์','กรัม',c.iceGrams,p.iceGrams)}
+  ${kpi('treat','tx','นำเข้าบำบัด','คน',c.intoTreatment,p.intoTreatment)}
+  ${kpi('done','tx','ผ่าน/สำเร็จการบำบัด','คน',c.completedTreatment,p.completedTreatment)}
+  ${kpi('screen','watch','ค้นหา/คัดกรอง (Re-X-ray)','คน',c.xray,p.xray)}
+  ${kpi('brain','enf','ผู้มีอาการจิตเวช (SMI-V)','คน',c.psychiatric,p.psychiatric)}
+</div>`;}
+
+/* ---------- เป้าหมาย ---------- */
+function goalCard(s,yearRows){
+  const byD=d=>sum(yearRows.filter(r=>r.district===d));
+  const dealTot=sum(yearRows).dealers,treatTot=sum(yearRows).intoTreatment;
+  const tgtDeal=s.district==='all'?TARGET_SUM.dealers:(TARGET.dealers[s.district]||0);
+  const tgtTreat=s.district==='all'?TARGET_SUM.treat:(TARGET.treat[s.district]||0);
+  const pD=tgtDeal?Math.min(dealTot/tgtDeal*100,100):0,pT=tgtTreat?Math.min(treatTot/tgtTreat*100,100):0;
+  const mini=(type,map)=>s.district!=='all'?'':DISTRICTS.map(d=>{
+    const v=byD(d)[type==='deal'?'dealers':'intoTreatment'],t=map[d]||0,p=t?Math.min(v/t*100,100):0;
+    return`<div class="mini"><span class="mname">${d}</span>
+      <span class="mtrack"><span class="mfill" style="width:${p}%;background:${type==='deal'?'var(--enf)':'var(--tx)'}"></span></span>
+      <span style="color:var(--muted)">${nf(v)}/${nf(t)}</span></div>`;}).join('');
+  return`<div class="card">
+    <h3 style="color:var(--ink)"><span style="color:var(--enf)">${ic('flag')}</span> ความคืบหน้าเทียบเป้าหมาย</h3>
+    <p class="csub">เป้าตามแผน มิ.ย.–ก.ย. ${s.year} • สะสมทั้งปีงบประมาณ</p>
+    <div class="goal">
+      <div class="glabel"><span class="gname" style="color:var(--enf)">${ic('shield')} จับกุมผู้ค้ารายสำคัญ</span>
+        <span class="gnum"><b>${nf(dealTot)}</b> / ${nf(tgtDeal)} ราย</span></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="track" style="flex:1"><div class="fill enf" style="width:${pD}%"></div></div>
+        <span class="gpct" style="color:var(--enf)">${pD.toFixed(0)}%</span></div>${mini('deal',TARGET.dealers)}</div>
+    <div class="goal">
+      <div class="glabel"><span class="gname" style="color:var(--tx)">${ic('treat')} นำผู้เสพ/ผู้ติดเข้าบำบัด</span>
+        <span class="gnum"><b>${nf(treatTot)}</b> / ${nf(tgtTreat)} คน</span></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="track" style="flex:1"><div class="fill tx" style="width:${pT}%"></div></div>
+        <span class="gpct" style="color:var(--tx)">${pT.toFixed(0)}%</span></div>${mini('treat',TARGET.treat)}</div>
+  </div>`;
+}
+
+/* ---------- กราฟแนวโน้ม ---------- */
+function trendCard(s){return`<div class="card">
+  <h3><span style="color:var(--seize)">${ic('chart')}</span> ${s.month===0?'แนวโน้มรายเดือน':'แนวโน้มรายสัปดาห์ • '+MONTHS[s.month-1]}</h3>
+  <p class="csub">คดีจับกุม (แท่ง) • นำเข้าบำบัด (เส้น)</p>
+  <div class="chartbox"><canvas id="cTrend"></canvas></div></div>`;}
+function drawTrend(s){
+  const ctx=document.getElementById('cTrend');if(!ctx)return;
+  let labels=[],cases=[],treat=[];
+  if(s.month===0){for(let m=1;m<=12;m++){const g=sum(filt(s.year,m,s.district));labels.push(SM[m]);cases.push(g.cases);treat.push(g.intoTreatment);}}
+  else{for(let w=1;w<=5;w++){const g=sum(ALL.filter(r=>r.year===s.year&&r.month===s.month&&r.week===w&&(s.district==='all'||r.district===s.district)));
+        labels.push('สัปดาห์ '+w);cases.push(g.cases);treat.push(g.intoTreatment);}}
+  mk('cTrend',{type:'bar',data:{labels,datasets:[
+    {label:'คดีจับกุม',data:cases,backgroundColor:cssv('--enf'),borderRadius:6,maxBarThickness:36},
+    {label:'นำเข้าบำบัด',data:treat,type:'line',borderColor:cssv('--tx'),backgroundColor:cssv('--tx'),tension:.35,borderWidth:2.6,pointRadius:3,fill:false}
+  ]},options:baseOpt()});
+}
+
+/* ---------- รายอำเภอ ---------- */
+function districtChartCard(s){return`<div class="card">
+  <h3><span style="color:var(--seize)">${ic('building')}</span> เปรียบเทียบรายอำเภอ</h3>
+  <p class="csub">${s.month===0?'สะสมทั้งปี '+s.year:MONTHS[s.month-1]+' '+s.year}</p>
+  <div class="chartbox tall"><canvas id="cDist"></canvas></div></div>`;}
+function drawDistrict(s){
+  if(!document.getElementById('cDist'))return;
+  const rows=DISTRICTS.map(d=>sum(filt(s.year,s.month,d)));
+  mk('cDist',{type:'bar',data:{labels:DISTRICTS,datasets:[
+    {label:'คดีจับกุม',data:rows.map(r=>r.cases),backgroundColor:cssv('--enf'),borderRadius:5},
+    {label:'นำเข้าบำบัด',data:rows.map(r=>r.intoTreatment),backgroundColor:cssv('--tx'),borderRadius:5}
+  ]},options:baseOpt({indexAxis:'y'})});
+}
+
+/* ---------- บันทึกเหตุการณ์ (notes) ---------- */
+function notesCard(s){
+  const rows=filt(s.year,s.month,s.district).filter(r=>r.notes&&String(r.notes).trim())
+            .sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  const body=rows.length?rows.map(r=>`<div class="fitem">
+    <div class="fhead"><span class="chip">${r.district}</span>
+      <span class="fper">${ic('calendar')} ${SM[r.month]} ${r.year} • สัปดาห์ ${r.week}</span></div>
+    <div class="ftxt">${esc(r.notes)}</div>
+    <div class="fby">โดย ${esc(r.updatedBy||'-')} • ${fmtTime(r.updatedAt)}</div></div>`).join('')
+    :`<div class="feedempty">— ยังไม่มีบันทึกเหตุการณ์ในช่วงที่เลือก —</div>`;
+  return`<div class="card">
+    <h3><span style="color:var(--watch)">${ic('note')}</span> บันทึกเหตุการณ์สำคัญรายสัปดาห์</h3>
+    <p class="csub">เหตุการณ์/ปฏิบัติการเด่นที่เจ้าหน้าที่รายงาน</p>
+    <div class="feed">${body}</div></div>`;
+}
+
+/* ---------- สัดส่วน ---------- */
+function typeCompareCard(){return`<div class="card">
+  <h3><span style="color:var(--seize)">${ic('scale')}</span> สัดส่วนผลการดำเนินงาน</h3>
+  <p class="csub">ในช่วงเวลาที่เลือก</p>
+  <div class="chartbox"><canvas id="cType"></canvas></div></div>`;}
+function drawType(c){
+  if(!document.getElementById('cType'))return;
+  mk('cType',{type:'doughnut',data:{labels:['คดีจับกุม','ผู้ต้องหา','ผู้ค้ารายสำคัญ','นำเข้าบำบัด','ผ่านบำบัด','คัดกรอง+จิตเวช'],
+    datasets:[{data:[c.cases,c.suspects,c.dealers,c.intoTreatment,c.completedTreatment,c.xray+c.psychiatric],
+    backgroundColor:[cssv('--enf'),'#d87468',cssv('--watch'),cssv('--tx'),'#3fc59b',cssv('--seize')],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'right',labels:{font:{family:'Sarabun',size:12},color:cssv('--ink2'),padding:9,boxWidth:12}}}}});
+}
+
+/* ---------- ปีย้อนหลัง ---------- */
+function histCard(){
+  const yrs=[2567,2568,2569];
+  const rows=yrs.map(y=>`<tr><td>ปี ${y}</td><td>${nf(HIST[y].cases)}</td><td>${nf(HIST[y].suspects)}</td>
+    <td>${nf(HIST[y].meth)}</td><td>${HIST[y].ice.toLocaleString('th-TH')}</td></tr>`).join('');
+  return`<div class="card">
+    <h3><span style="color:var(--seize)">${ic('calendar')}</span> บริบทย้อนหลังรายปี (จากแผนปฏิบัติการ)</h3>
+    <p class="csub">ผลการจับกุมสะสมทั้งจังหวัด เพื่อดูทิศทางภาพรวม</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>ปีงบประมาณ</th><th>คดี</th><th>ผู้ต้องหา</th><th>ยาบ้า(เม็ด)</th><th>ไอซ์(ก.)</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <p class="note">${ic('alert')} ปี 2569 ปริมาณยาบ้าเพิ่มสูงมากเทียบปีก่อน สะท้อนการลักลอบลำเลียงปริมาณมากผ่านพื้นที่ — จุดเฝ้าระวังเชิงยุทธศาสตร์</p></div>`;
+}
+
+/* ---------- ตารางสรุปรายอำเภอ (ครบทุกฟิลด์) ---------- */
+function tableCard(s){
+  const rows=DISTRICTS.map(d=>({d,g:sum(filt(s.year,s.month,d))}));
+  const tot=sum(filt(s.year,s.month,'all'));
+  const row=(name,g)=>`<tr><td>${name}</td><td>${nf(g.cases)}</td><td>${nf(g.suspects)}</td><td>${nf(g.dealers)}</td>
+    <td>${nf(g.methPills)}</td><td>${g.iceGrams.toLocaleString('th-TH')}</td><td>${nf(g.intoTreatment)}</td>
+    <td>${nf(g.completedTreatment)}</td><td>${nf(g.xray)}</td><td>${nf(g.psychiatric)}</td></tr>`;
+  return`<div class="card" style="margin-bottom:18px">
+    <h3><span style="color:var(--enf)">${ic('cases')}</span> ตารางสรุปรายอำเภอ (ครบทุกตัวชี้วัด)</h3>
+    <p class="csub">${s.month===0?'สะสมทั้งปี '+s.year:MONTHS[s.month-1]+' '+s.year}${s.district!=='all'?' • '+s.district:''}</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>อำเภอ</th><th>คดี</th><th>ผู้ต้องหา</th><th>ผู้ค้า</th><th>ยาบ้า(เม็ด)</th><th>ไอซ์(ก.)</th>
+        <th>นำเข้าบำบัด</th><th>สำเร็จ</th><th>คัดกรอง</th><th>จิตเวช</th></tr></thead>
+      <tbody>${rows.map(({d,g})=>row(d,g)).join('')}</tbody>
+      <tfoot>${row('รวมทั้งจังหวัด',tot)}</tfoot>
+    </table></div></div>`;
+}
+
+/* ---------- ข้อมูลดิบรายสัปดาห์ทั้งหมด ---------- */
+function rawCard(){
+  const rows=[...ALL].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  const body=rows.length?rows.map(r=>`<tr>
+    <td>${SM[r.month]} ${r.year} • ส.${r.week}</td><td>${r.district}</td>
+    <td>${nf(r.cases)}</td><td>${nf(r.suspects)}</td><td>${nf(r.dealers)}</td><td>${nf(r.methPills)}</td>
+    <td>${(Number(r.iceGrams)||0).toLocaleString('th-TH')}</td><td>${nf(r.intoTreatment)}</td><td>${nf(r.completedTreatment)}</td>
+    <td>${nf(r.xray)}</td><td>${nf(r.psychiatric)}</td><td style="text-align:left;max-width:200px;white-space:normal">${esc(r.notes||'')}</td>
+    <td style="text-align:left">${esc(r.updatedBy||'-')}</td></tr>`).join('')
+    :`<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:24px">— ยังไม่มีข้อมูล —</td></tr>`;
+  return`<details><summary>${ic('note')} ดูข้อมูลรายสัปดาห์ทั้งหมดในระบบ (${ALL.length} รายการ)</summary>
+    <div class="card"><div class="tablewrap"><table>
+      <thead><tr><th>ช่วงเวลา</th><th>อำเภอ</th><th>คดี</th><th>ผู้ต้องหา</th><th>ผู้ค้า</th><th>ยาบ้า</th><th>ไอซ์(ก.)</th>
+        <th>บำบัด</th><th>สำเร็จ</th><th>คัดกรอง</th><th>จิตเวช</th><th>หมายเหตุ</th><th>ผู้กรอก</th></tr></thead>
+      <tbody>${body}</tbody></table></div></div></details>`;
+}
+
+/* ===================== AI สรุป ===================== */
+function aiSummary(s,c,p,curLabel,prevLabel,ySum,curRows){
+  const lines=[],plain=[];const has=curRows.length>0;
+  const scope=s.district==='all'?'ทั้งจังหวัด':'อำเภอ'+s.district;
+  if(!has){lines.push({t:`ยัง<b>ไม่มีข้อมูล</b>สำหรับ ${curLabel} (${scope}) — กรุณากรอกข้อมูลผ่านระบบเพื่อให้แดชบอร์ดประมวลผล`});}
+  else{
+    lines.push({t:`สถานการณ์ ${scope} ช่วง <b>${curLabel}</b>: จับกุม <span class="hl">${nf(c.cases)} คดี</span> ผู้ต้องหา ${nf(c.suspects)} คน • นำผู้เสพเข้าบำบัด <span class="hl">${nf(c.intoTreatment)} คน</span> (สำเร็จ ${nf(c.completedTreatment)}) • ของกลางยาบ้า ${nf(c.methPills)} เม็ด ไอซ์ ${c.iceGrams.toLocaleString('th-TH')} กรัม`});
+    plain.push(`ภาพรวม ${scope} ${curLabel}: คดี ${nf(c.cases)} | ผู้ต้องหา ${nf(c.suspects)} | บำบัด ${nf(c.intoTreatment)} (สำเร็จ ${nf(c.completedTreatment)}) | ยาบ้า ${nf(c.methPills)} เม็ด | ไอซ์ ${c.iceGrams} ก.`);
+    if(p&&(p.cases||p.intoTreatment)){
+      const dc=pct(c.cases,p.cases),dt=pct(c.intoTreatment,p.intoTreatment);
+      lines.push({t:`เทียบ ${prevLabel}: คดีจับกุม${arrow(dc)} <b>${absT(dc)}</b> • การนำเข้าบำบัด${arrow(dt)} <b>${absT(dt)}</b>`});
+      plain.push(`เทียบ ${prevLabel}: คดี ${arrowT(dc)}${absT(dc)}, บำบัด ${arrowT(dt)}${absT(dt)}`);
+    }
+    if(s.district==='all'){
+      const byD=DISTRICTS.map(d=>({d,g:sum(curRows.filter(r=>r.district===d))}));
+      const tc=[...byD].sort((a,b)=>b.g.cases-a.g.cases)[0],tt=[...byD].sort((a,b)=>b.g.intoTreatment-a.g.intoTreatment)[0];
+      if(tc.g.cases>0)lines.push({t:`พื้นที่จับกุมสูงสุด: <span class="hl">${tc.d}</span> (${nf(tc.g.cases)} คดี) • นำเข้าบำบัดสูงสุด: <span class="hl">${tt.d}</span> (${nf(tt.g.intoTreatment)} คน)`});
+      if(tc.g.cases>0)plain.push(`จับกุมสูงสุด: ${tc.d} ${nf(tc.g.cases)} คดี | บำบัดสูงสุด: ${tt.d} ${nf(tt.g.intoTreatment)} คน`);
+    }
+    const tgtDeal=s.district==='all'?TARGET_SUM.dealers:(TARGET.dealers[s.district]||0);
+    const tgtTreat=s.district==='all'?TARGET_SUM.treat:(TARGET.treat[s.district]||0);
+    const pD=tgtDeal?ySum.dealers/tgtDeal*100:0,pT=tgtTreat?ySum.intoTreatment/tgtTreat*100:0;
+    lines.push({t:`ความคืบหน้าสะสมเทียบเป้า: จับกุมผู้ค้า <b>${pD.toFixed(0)}%</b> (${nf(ySum.dealers)}/${nf(tgtDeal)}) • บำบัดฟื้นฟู <b>${pT.toFixed(0)}%</b> (${nf(ySum.intoTreatment)}/${nf(tgtTreat)})`});
+    plain.push(`คืบหน้าเป้า: ผู้ค้า ${pD.toFixed(0)}% | บำบัด ${pT.toFixed(0)}%`);
+    const w=[];
+    if(pT<50)w.push('การบำบัดต่ำกว่าครึ่งของเป้า ควรเร่งคัดกรองและนำผู้เสพเข้าระบบ');
+    if(pD<50)w.push('การจับกุมผู้ค้ายังห่างเป้า ควรเร่งสืบสวนขยายผลเครือข่าย');
+    if(c.psychiatric>0)w.push(`พบผู้มีอาการจิตเวช (SMI-V) ${nf(c.psychiatric)} คน — ติดตามดูแลต่อเนื่องเพื่อลดความเสี่ยงในชุมชน`);
+    if(w.length){lines.push({t:`<span class="hl">ข้อควรเร่งรัด:</span> ${w.join(' • ')}`,warn:true});plain.push('ข้อควรเร่งรัด: '+w.join('; '));}
+    const ev=curRows.filter(r=>r.notes&&String(r.notes).trim()).map(r=>`${r.district}: ${String(r.notes).trim()}`);
+    if(ev.length){lines.push({t:`เหตุการณ์สำคัญ: ${ev.slice(0,3).join(' / ')}${ev.length>3?' …':''}`});plain.push('เหตุการณ์สำคัญ: '+ev.slice(0,3).join(' / '));}
+  }
+  window.__plain=`สรุปสถานการณ์ยาเสพติด จ.หนองบัวลำภู — ${curLabel} (${scope})\n`+plain.map(x=>'• '+x).join('\n')+`\n(ออกรายงานโดยระบบแดชบอร์ด ${new Date().toLocaleString('th-TH')})`;
+  return`<div class="ai">
+    <button class="copybtn" onclick="copyReport()">${ic('note')} คัดลอกรายงาน</button>
+    <h2><span class="iccirc">${ic('ai')}</span> บทสรุปผู้บริหาร <span class="badge">AI วิเคราะห์อัตโนมัติ</span></h2>
+    <p class="period">${curLabel} • ${scope}</p>
+    <div class="body">${lines.map(l=>`<span class="ln${l.warn?' warn':''}">${l.t}</span>`).join('')}</div></div>`;
+}
+function copyReport(){navigator.clipboard.writeText(window.__plain||'').then(()=>toast('คัดลอกรายงานสำหรับส่งต่อแล้ว'));}
+
+/* ===================== utils ===================== */
+function pct(c,p){return p?(c-p)/p*100:null;}
+function absT(d){return d===null?'(ใหม่)':Math.abs(d).toFixed(1)+'%';}
+function arrow(d){return d===null?'':d>0?' เพิ่มขึ้น':d<0?' ลดลง':' คงที่';}
+function arrowT(d){return d===null?'+':d>0?'▲':d<0?'▼':'=';}
+function nf(v){return (Number(v)||0).toLocaleString('th-TH');}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtTime(iso){if(!iso)return'-';const d=new Date(iso);return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});}
+function cssv(n){return getComputedStyle(document.body).getPropertyValue(n).trim()||'#888';}
+function baseOpt(extra){return Object.assign({responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{font:{family:'Sarabun',size:12},color:cssv('--ink2'),boxWidth:13,padding:14}}},
+  scales:{x:{ticks:{font:{family:'Sarabun',size:11},color:cssv('--muted')},grid:{display:false}},
+          y:{ticks:{font:{family:'Sarabun',size:11},color:cssv('--muted')},grid:{color:cssv('--line')},beginAtZero:true}}},extra||{});}
+function mk(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),cfg);}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
+function toggleTheme(){const d=document.body.getAttribute('data-theme')==='dark';
+  document.body.setAttribute('data-theme',d?'light':'dark');paintStatic();render();}
+function exportCSV(){
+  const head=['ปี','เดือน','สัปดาห์','อำเภอ','คดี','ผู้ต้องหา','ผู้ค้า','ยาบ้า_เม็ด','ไอซ์_กรัม','นำเข้าบำบัด','ผ่านบำบัด','คัดกรอง','จิตเวช','หมายเหตุ','ผู้กรอก','อัปเดต'];
+  const lines=ALL.map(r=>[r.year,r.month,r.week,r.district,r.cases,r.suspects,r.dealers,r.methPills,r.iceGrams,
+    r.intoTreatment,r.completedTreatment,r.xray,r.psychiatric,'"'+String(r.notes||'').replace(/"/g,'""')+'"','"'+String(r.updatedBy||'').replace(/"/g,'""')+'"',r.updatedAt]);
+  const csv='\uFEFF'+[head,...lines].map(a=>a.join(',')).join('\n');
+  const b=new Blob([csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='drug_situation_nbl_'+Date.now()+'.csv';a.click();URL.revokeObjectURL(u);toast('ส่งออก CSV แล้ว');
+}
+
+/* เริ่มต้น */
+paintStatic();
+refresh(false);
+setInterval(()=>refresh(false),REFRESH_MS);
+</script>
+</body>
+</html>
