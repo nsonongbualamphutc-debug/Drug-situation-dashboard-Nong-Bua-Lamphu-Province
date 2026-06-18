@@ -42,7 +42,7 @@
   .crest{width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,#fff,#dfe7f7);
           display:grid;place-items:center;color:var(--navy);font-family:'Kanit';font-weight:800;font-size:20px;
           box-shadow:0 6px 18px rgba(0,0,0,.25);letter-spacing:-.5px}
-  .htxt h1{font-family:'Kanit';font-weight:700;font-size:1.5rem;margin:0;line-height:1.15;letter-spacing:-.01em}
+  .htxt h1{font-family:'Kanit';font-weight:700;font-size:clamp(1.12rem,4.2vw,1.5rem);margin:0;line-height:1.18;letter-spacing:-.01em}
   .htxt p{margin:4px 0 0;color:#aebede;font-size:.85rem;display:flex;align-items:center;gap:7px}
   .htools{margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
   .live{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;color:#cdd9f2;
@@ -96,7 +96,7 @@
   /* ===== KPI ===== */
   .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
   @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:430px){.kpis{grid-template-columns:1fr}}
+  @media(max-width:380px){.kpis{grid-template-columns:1fr}}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
        padding:16px 17px;display:flex;gap:14px;align-items:flex-start;position:relative;overflow:hidden;transition:.2s}
   .kpi:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(16,32,63,.1),0 18px 40px rgba(16,32,63,.1)}
@@ -172,6 +172,38 @@
         margin:0 auto 14px;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
   .sechead{font-family:'Kanit';font-weight:700;font-size:1.1rem;margin:6px 2px 12px;display:flex;align-items:center;gap:9px;color:var(--ink)}
   .sechead .ic{font-size:1.3rem;color:var(--enf)}
+  /* ===== MOBILE ===== */
+  @media(max-width:600px){
+    .wrap{padding:0 12px 56px}
+    .hero{padding:16px 15px 18px;border-radius:0 0 18px 18px}
+    .htxt p{font-size:.74rem}
+    .crest{width:44px;height:44px;font-size:16px}
+    .htools{gap:7px}
+    .hbtn{padding:8px 11px}
+    .rcell{flex:1 1 calc(50% - 5px);padding:10px 12px}
+    .rcell .rv{font-size:1.12rem}
+    .ai{padding:18px 15px}
+    .ai .copybtn{position:static;margin:0 0 12px}
+    .ai h2{font-size:.98rem;flex-wrap:wrap;gap:8px}
+    .ai .period{padding-left:0}
+    .ai .body{font-size:.9rem;line-height:1.7}
+    .card{padding:16px 14px}
+    .card .csub{padding-left:0}
+    .card h3{font-size:.96rem}
+    .sechead{font-size:1rem;margin:4px 2px 10px}
+    .kpis{gap:11px}
+    .kpi{padding:14px}
+    .kpi .k-val{font-size:1.5rem}
+    .chartbox{height:260px}.chartbox.tall{height:300px}
+    .mini{grid-template-columns:84px 1fr auto;gap:8px}
+    .mini .mname{font-size:.74rem}
+    .filters{padding:12px 13px;gap:10px}
+    .filters .fld{flex:1 1 100%}
+    .filters select{width:100%;min-width:0}
+    .updtxt{margin-left:0;width:100%}
+    details>summary{padding:13px 15px;font-size:.9rem}
+    th,td{padding:8px 9px}
+  }
 </style>
 </head>
 <body>
@@ -222,6 +254,25 @@ const TARGET_SUM={dealers:511, treat:2415};
 const HIST={2567:{cases:1922,suspects:1977,meth:403427,ice:936.23},
             2568:{cases:1427,suspects:1457,meth:221482,ice:13.54},
             2569:{cases:1318,suspects:1345,meth:1040354,ice:95.28}};
+
+/* ข้อมูลรายอำเภอจากแผนปฏิบัติการ — ผลการจับกุม (คดี/ยาบ้าเม็ด/ไอซ์กรัม) */
+const PLAN_ARREST={
+ 'เมืองหนองบัวลำภู':{y67:{c:449,m:195824,i:895.5}, y68:{c:270,m:29295,i:3.8},  y69:{c:290,m:419579,i:33.09}},
+ 'ศรีบุญเรือง':    {y67:{c:404,m:166824,i:28.27},y68:{c:337,m:86009,i:2.82}, y69:{c:274,m:102589,i:52.55}},
+ 'นากลาง':         {y67:{c:201,m:54284,i:0.8},  y68:{c:179,m:61301,i:0.6},  y69:{c:174,m:388274,i:5.05}},
+ 'โนนสัง':         {y67:{c:379,m:6529,i:1.6},   y68:{c:202,m:4241,i:1.8},   y69:{c:136,m:12760,i:0}},
+ 'สุวรรณคูหา':     {y67:{c:344,m:20632,i:7.5},  y68:{c:318,m:22012,i:3.72}, y69:{c:271,m:102468,i:4.59}},
+ 'นาวัง':          {y67:{c:145,m:9364,i:2.54},  y68:{c:121,m:18664,i:0.8},  y69:{c:169,m:94664,i:0}}
+};
+/* ข้อมูลรายอำเภอจากแผน — ผลการบำบัดฟื้นฟู (ผล 67/68, เป้า/ผล/ร้อยละ 69) */
+const PLAN_TREAT={
+ 'เมืองหนองบัวลำภู':{p67:668,p68:543,t69:631,p69:283,pct:44.85},
+ 'ศรีบุญเรือง':    {p67:494,p68:291,t69:344,p69:258,pct:75},
+ 'นากลาง':         {p67:451,p68:323,t69:425,p69:237,pct:55.76},
+ 'โนนสัง':         {p67:172,p68:282,t69:292,p69:221,pct:75.68},
+ 'สุวรรณคูหา':     {p67:423,p68:482,t69:315,p69:379,pct:120.32},
+ 'นาวัง':          {p67:169,p68:232,t69:168,p69:188,pct:111.90}
+};
 
 const FIELDS=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric'];
 let ALL=[],charts={};
@@ -327,11 +378,12 @@ function render(){
     ${kpiCards(curSum,prevSum)}
     <div class="row r2">${goalCard(s,yearRows)}${trendCard(s)}</div>
     <div class="row r2b">${districtChartCard(s)}${notesCard(s)}</div>
-    <div class="row r2b">${typeCompareCard()}${histCard()}</div>
+    <div class="row r2b">${typeCompareCard()}${yearTrendCard()}</div>
+    ${planSection()}
     ${tableCard(s)}
     ${rawCard()}
   `;
-  drawTrend(s);drawDistrict(s);drawType(curSum);
+  drawTrend(s);drawDistrict(s);drawType(curSum);drawYearTrend();
 }
 
 function renderRibbon(c,label){
@@ -472,6 +524,75 @@ function histCard(){
       <thead><tr><th>ปีงบประมาณ</th><th>คดี</th><th>ผู้ต้องหา</th><th>ยาบ้า(เม็ด)</th><th>ไอซ์(ก.)</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
     <p class="note">${ic('alert')} ปี 2569 ปริมาณยาบ้าเพิ่มสูงมากเทียบปีก่อน สะท้อนการลักลอบลำเลียงปริมาณมากผ่านพื้นที่ — จุดเฝ้าระวังเชิงยุทธศาสตร์</p></div>`;
+}
+
+/* ---------- กราฟแนวโน้มรายปี (ภาพรวมจังหวัด) ---------- */
+function yearTrendCard(){return`<div class="card">
+  <h3><span style="color:var(--seize)">${ic('chart')}</span> แนวโน้มภาพรวมรายปี</h3>
+  <p class="csub">คดีจับกุม (แท่ง) • ปริมาณยาบ้า (เส้น) ปี 2567–2569</p>
+  <div class="chartbox"><canvas id="cYear"></canvas></div></div>`;}
+function drawYearTrend(){
+  if(!document.getElementById('cYear'))return;const yrs=[2567,2568,2569];
+  mk('cYear',{type:'bar',data:{labels:yrs.map(y=>'ปี '+y),datasets:[
+    {label:'คดีจับกุม',data:yrs.map(y=>HIST[y].cases),backgroundColor:cssv('--enf'),borderRadius:6,yAxisID:'y',maxBarThickness:50},
+    {label:'ยาบ้า (เม็ด)',data:yrs.map(y=>HIST[y].meth),type:'line',borderColor:cssv('--seize'),backgroundColor:cssv('--seize'),tension:.3,borderWidth:2.6,pointRadius:4,yAxisID:'y1'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{family:'Sarabun',size:12},color:cssv('--ink2'),boxWidth:13,padding:12}}},
+    scales:{x:{ticks:{font:{family:'Sarabun',size:11},color:cssv('--muted')},grid:{display:false}},
+      y:{position:'left',ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{color:cssv('--line')},beginAtZero:true},
+      y1:{position:'right',ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{display:false},beginAtZero:true}}}});
+}
+
+/* ---------- ส่วนข้อมูลตามแผนปฏิบัติการ (ตัวเลขจริง) ---------- */
+function planSection(){
+  const iceShow=v=>v?Number(v).toLocaleString('th-TH'):'-';
+  const aRows=DISTRICTS.map(d=>{const a=PLAN_ARREST[d];
+    return`<tr><td>${d}</td>
+      <td>${nf(a.y67.c)}</td><td>${nf(a.y67.m)}</td><td>${iceShow(a.y67.i)}</td>
+      <td>${nf(a.y68.c)}</td><td>${nf(a.y68.m)}</td><td>${iceShow(a.y68.i)}</td>
+      <td>${nf(a.y69.c)}</td><td>${nf(a.y69.m)}</td><td>${iceShow(a.y69.i)}</td></tr>`;}).join('');
+  const tRows=DISTRICTS.map(d=>{const t=PLAN_TREAT[d];const col=t.pct>=100?'var(--tx)':t.pct<60?'var(--enf)':'var(--ink)';
+    return`<tr><td>${d}</td><td>${nf(t.p67)}</td><td>${nf(t.p68)}</td><td>${nf(t.t69)}</td><td>${nf(t.p69)}</td>
+      <td style="color:${col};font-weight:600">${t.pct}%</td></tr>`;}).join('');
+  const gRows=DISTRICTS.map(d=>`<tr><td>${d}</td><td>${nf(TARGET.dealers[d])}</td><td>${nf(TARGET.treat[d])}</td></tr>`).join('');
+  return`
+  <div class="sechead">${ic('flag')} ข้อมูลตามแผนปฏิบัติการ จังหวัดหนองบัวลำภู (ปีงบประมาณ 2567–2569)</div>
+  <div class="card" style="margin-bottom:16px">
+    <h3><span style="color:var(--enf)">${ic('shield')}</span> ผลการจับกุมคดียาเสพติด รายอำเภอ</h3>
+    <p class="csub">จำนวนคดี / ยาบ้า (เม็ด) / ไอซ์ (กรัม) แยกตามปีงบประมาณ</p>
+    <div class="tablewrap"><table>
+      <thead>
+        <tr><th rowspan="2">อำเภอ</th><th colspan="3">ปี 2567</th><th colspan="3">ปี 2568</th><th colspan="3">ปี 2569</th></tr>
+        <tr><th>คดี</th><th>ยาบ้า</th><th>ไอซ์</th><th>คดี</th><th>ยาบ้า</th><th>ไอซ์</th><th>คดี</th><th>ยาบ้า</th><th>ไอซ์</th></tr>
+      </thead>
+      <tbody>${aRows}</tbody>
+      <tfoot><tr><td>รวมทั้งจังหวัด</td>
+        <td>${nf(HIST[2567].cases)}</td><td>${nf(HIST[2567].meth)}</td><td>${HIST[2567].ice.toLocaleString('th-TH')}</td>
+        <td>${nf(HIST[2568].cases)}</td><td>${nf(HIST[2568].meth)}</td><td>${HIST[2568].ice.toLocaleString('th-TH')}</td>
+        <td>${nf(HIST[2569].cases)}</td><td>${nf(HIST[2569].meth)}</td><td>${HIST[2569].ice.toLocaleString('th-TH')}</td></tr></tfoot>
+    </table></div>
+    <p class="note">${ic('alert')} ปี 2569 ปริมาณยาบ้ารวมสูงถึง ${nf(HIST[2569].meth)} เม็ด เพิ่มขึ้นมากจากปีก่อน สะท้อนการลักลอบลำเลียงปริมาณมากผ่านพื้นที่</p>
+  </div>
+  <div class="row r2b">
+    <div class="card">
+      <h3><span style="color:var(--tx)">${ic('treat')}</span> ผลการบำบัดฟื้นฟูผู้เสพ/ผู้ติด รายอำเภอ</h3>
+      <p class="csub">ผลงานปี 2567–2568 และเป้า/ผล/ร้อยละ ปี 2569</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>อำเภอ</th><th>2567</th><th>2568</th><th>เป้า 69</th><th>ผล 69</th><th>ร้อยละ</th></tr></thead>
+        <tbody>${tRows}</tbody>
+        <tfoot><tr><td>รวม</td><td>2,377</td><td>2,153</td><td>2,175</td><td>1,187</td><td style="font-weight:700">63.72%</td></tr></tfoot>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3><span style="color:var(--watch)">${ic('flag')}</span> เป้าหมายการดำเนินงาน (มิ.ย.–ก.ย. 2569)</h3>
+      <p class="csub">ค่าเป้าที่ใช้วัดความคืบหน้าในแดชบอร์ดส่วนบน</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>อำเภอ</th><th>จับกุมผู้ค้า (ราย)</th><th>บำบัดฟื้นฟู (คน)</th></tr></thead>
+        <tbody>${gRows}</tbody>
+        <tfoot><tr><td>รวม</td><td>${nf(TARGET_SUM.dealers)}</td><td>${nf(TARGET_SUM.treat)}</td></tr></tfoot>
+      </table></div>
+    </div>
+  </div>`;
 }
 
 /* ---------- ตารางสรุปรายอำเภอ (ครบทุกฟิลด์) ---------- */
