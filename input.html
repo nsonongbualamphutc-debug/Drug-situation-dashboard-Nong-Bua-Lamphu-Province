@@ -199,7 +199,7 @@ async function loadAll(){
   setStatus('กำลังโหลด...','muted');
   try{
     const d=await jsonp({action:'getData'});
-    if(d.ok){ALLROWS=d.rows||[];renderTable();setStatus('พร้อมใช้งาน','muted');}
+    if(d.ok){ALLROWS=d.rows||[];renderTable();loadOne();setStatus('พร้อมใช้งาน • เชื่อมกับฐานข้อมูลแล้ว','muted');}
     else setStatus('โหลดไม่สำเร็จ: '+d.error,'err');
   }catch(e){setStatus('⚠ '+e.message+' (ตรวจสอบ URL API)','err');}
 }

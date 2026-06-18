@@ -172,6 +172,18 @@
         margin:0 auto 14px;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
   .sechead{font-family:'Kanit';font-weight:700;font-size:1.1rem;margin:6px 2px 12px;display:flex;align-items:center;gap:9px;color:var(--ink)}
   .sechead .ic{font-size:1.3rem;color:var(--enf)}
+  .ygrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:900px){.ygrid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:460px){.ygrid{grid-template-columns:1fr}}
+  .ycard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+  .ycard .yhead{display:flex;align-items:center;gap:9px;font-family:'Kanit';font-weight:600;font-size:.92rem}
+  .ycard .yhead .ib{width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
+  .ycard .yhead .ib .ic{font-size:1.1rem}
+  .ycard .yval{font-family:'Kanit';font-weight:700;font-size:1.55rem;margin:11px 0 1px;font-variant-numeric:tabular-nums}
+  .ycard .ku{font-size:.7rem;color:var(--muted);font-weight:400}
+  .ycard .ymini{height:92px;margin:10px 0 8px}
+  .ycard .yvals{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+  .ycard .yvals b{color:var(--ink)}
   /* ===== MOBILE ===== */
   @media(max-width:600px){
     .wrap{padding:0 12px 56px}
@@ -230,6 +242,7 @@
   <div class="filters">
     <div class="fld"><label>ปีงบประมาณ (พ.ศ.)</label><select id="fl_year"></select></div>
     <div class="fld"><label>ช่วงเวลา</label><select id="fl_month"></select></div>
+    <div class="fld"><label>สัปดาห์</label><select id="fl_week"></select></div>
     <div class="fld"><label>อำเภอ</label><select id="fl_district"></select></div>
     <span class="updtxt" id="updTxt">—</span>
   </div>
@@ -258,12 +271,12 @@ const HIST={2567:{cases:1922,suspects:1977,meth:403427,ice:936.23},
 
 /* ข้อมูลรายอำเภอจากแผนปฏิบัติการ — ผลการจับกุม (คดี/ยาบ้าเม็ด/ไอซ์กรัม) */
 const PLAN_ARREST={
- 'เมืองหนองบัวลำภู':{y67:{c:449,m:195824,i:895.5}, y68:{c:270,m:29295,i:3.8},  y69:{c:290,m:419579,i:33.09}},
- 'ศรีบุญเรือง':    {y67:{c:404,m:166824,i:28.27},y68:{c:337,m:86009,i:2.82}, y69:{c:274,m:102589,i:52.55}},
- 'นากลาง':         {y67:{c:201,m:54284,i:0.8},  y68:{c:179,m:61301,i:0.6},  y69:{c:174,m:388274,i:5.05}},
- 'โนนสัง':         {y67:{c:379,m:6529,i:1.6},   y68:{c:202,m:4241,i:1.8},   y69:{c:136,m:12760,i:0}},
- 'สุวรรณคูหา':     {y67:{c:344,m:20632,i:7.5},  y68:{c:318,m:22012,i:3.72}, y69:{c:271,m:102468,i:4.59}},
- 'นาวัง':          {y67:{c:145,m:9364,i:2.54},  y68:{c:121,m:18664,i:0.8},  y69:{c:169,m:94664,i:0}}
+ 'เมืองหนองบัวลำภู':{y67:{c:449,s:467,m:195824,i:895.5}, y68:{c:270,s:280,m:29295,i:3.8}, y69:{c:290,s:296,m:419579,i:33.09}},
+ 'ศรีบุญเรือง':{y67:{c:404,s:418,m:166824,i:28.27},y68:{c:337,s:342,m:86009,i:2.82}, y69:{c:274,s:283,m:102589,i:52.55}},
+ 'นากลาง':{y67:{c:201,s:215,m:54284,i:0.8}, y68:{c:179,s:192,m:61301,i:0.6}, y69:{c:174,s:181,m:388274,i:5.05}},
+ 'โนนสัง':{y67:{c:379,s:377,m:6529,i:1.6}, y68:{c:202,s:192,m:4241,i:1.8}, y69:{c:136,s:137,m:12760,i:0}},
+ 'สุวรรณคูหา':{y67:{c:344,s:356,m:20632,i:7.5}, y68:{c:318,s:327,m:22012,i:3.72}, y69:{c:271,s:276,m:102468,i:4.59}},
+ 'นาวัง':{y67:{c:145,s:144,m:9364,i:2.54}, y68:{c:121,s:124,m:18664,i:0.8}, y69:{c:169,s:172,m:94664,i:0}}
 };
 /* ข้อมูลรายอำเภอจากแผน — ผลการบำบัดฟื้นฟู (ผล 67/68, เป้า/ผล/ร้อยละ 69) */
 const PLAN_TREAT={
@@ -276,8 +289,8 @@ const PLAN_TREAT={
 };
 /* คำนวณยอดรวมจังหวัดจากข้อมูลรายอำเภอจริง (ฐานเดียวกับไฟล์ Excel) */
 [[2567,'y67'],[2568,'y68'],[2569,'y69']].forEach(([y,k])=>{
-  let c=0,m=0,i=0;DISTRICTS.forEach(d=>{c+=PLAN_ARREST[d][k].c;m+=PLAN_ARREST[d][k].m;i+=PLAN_ARREST[d][k].i;});
-  HIST[y].cases=c;HIST[y].meth=m;HIST[y].ice=Math.round(i*100)/100;
+  let c=0,sp=0,m=0,i=0;DISTRICTS.forEach(d=>{c+=PLAN_ARREST[d][k].c;sp+=PLAN_ARREST[d][k].s;m+=PLAN_ARREST[d][k].m;i+=PLAN_ARREST[d][k].i;});
+  HIST[y].cases=c;HIST[y].suspects=sp;HIST[y].meth=m;HIST[y].ice=Math.round(i*100)/100;
 });
 
 const FIELDS=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric'];
@@ -355,26 +368,34 @@ function buildFilters(){
   const fy=document.getElementById('fl_year');fy.innerHTML=years.map(y=>`<option>${y}</option>`).join('');
   const fm=document.getElementById('fl_month');
   fm.innerHTML='<option value="0">ทั้งปี (สะสมรายเดือน)</option>'+MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  const fwk=document.getElementById('fl_week');
+  fwk.innerHTML='<option value="0">ทั้งเดือน (รวมทุกสัปดาห์)</option>'+[1,2,3,4,5].map(w=>`<option value="${w}">สัปดาห์ที่ ${w}</option>`).join('');
   const fd=document.getElementById('fl_district');
   fd.innerHTML='<option value="all">ทุกอำเภอ</option>'+DISTRICTS.map(d=>`<option>${d}</option>`).join('');
-  [fy,fm,fd].forEach(el=>{if(!el.dataset.bound){el.addEventListener('change',render);el.dataset.bound=1;}});
+  [fy,fm,fwk,fd].forEach(el=>{if(!el.dataset.bound){el.addEventListener('change',render);el.dataset.bound=1;}});
 }
 function sel(){return{year:+document.getElementById('fl_year').value,
                       month:+document.getElementById('fl_month').value,
+                      week:+(document.getElementById('fl_week')||{value:0}).value,
                       district:document.getElementById('fl_district').value};}
 function sum(rows){const o={};FIELDS.forEach(f=>o[f]=0);rows.forEach(r=>FIELDS.forEach(f=>o[f]+=Number(r[f])||0));return o;}
-function filt(y,m,d){return ALL.filter(r=>r.year===y&&(m===0||r.month===m)&&(d==='all'||r.district===d));}
+function filt(y,m,d,w){return ALL.filter(r=>r.year===y&&(m===0||r.month===m)&&(d==='all'||r.district===d)&&(!w||r.week===w));}
 
 /* ===================== RENDER ===================== */
 function render(){
   if(!document.getElementById('fl_year').options.length)buildFilters();
   const s=sel();
-  const cur=filt(s.year,s.month,s.district),curSum=sum(cur);
+  const fw=document.getElementById('fl_week'); if(fw){fw.disabled=(s.month===0); if(s.month===0){fw.value='0';s.week=0;}}
+  const cur=filt(s.year,s.month,s.district,s.week),curSum=sum(cur);
   let prevSum,prevLabel,curLabel;
   if(s.month===0){const py=s.year-1;prevSum=sum(filt(py,0,s.district));prevLabel='ปี '+py;curLabel='ปี '+s.year;}
-  else{const pm=s.month-1;prevSum=pm>=1?sum(filt(s.year,pm,s.district)):sum([]);
+  else if(s.week>0){curLabel='สัปดาห์ '+s.week+' • '+MONTHS[s.month-1]+' '+s.year;
+       const pw=s.week-1;
+       if(pw>=1){prevSum=sum(filt(s.year,s.month,s.district,pw));prevLabel='สัปดาห์ '+pw;}
+       else{prevSum=sum([]);prevLabel='—';}}
+  else{const pm=s.month-1;prevSum=pm>=1?sum(filt(s.year,pm,s.district,0)):sum([]);
        prevLabel=pm>=1?SM[pm]+' '+s.year:'—';curLabel=MONTHS[s.month-1]+' '+s.year;}
-  const yearRows=filt(s.year,0,s.district),ySum=sum(yearRows);
+  const yearRows=filt(s.year,0,s.district,0),ySum=sum(yearRows);
 
   renderRibbon(curSum,curLabel);
 
@@ -383,13 +404,14 @@ function render(){
     <div class="sechead">${ic('chart')} ตัวชี้วัดภาพรวม — ${curLabel}${s.district!=='all'?' • '+s.district:''}</div>
     ${kpiCards(curSum,prevSum)}
     <div class="row r2">${goalCard(s,yearRows)}${trendCard(s)}</div>
-    <div class="row r2b">${districtChartCard(s)}${notesCard(s)}</div>
-    <div class="row r2b">${typeCompareCard()}${yearTrendCard()}</div>
+    <div class="row r2b">${districtChartCard(s)}${typeCompareCard()}</div>
+    ${notesCard(s)}
+    ${yearCompareSection()}
     ${planSection()}
     ${tableCard(s)}
     ${rawCard()}
   `;
-  drawTrend(s);drawDistrict(s);drawType(curSum);drawYearTrend();
+  drawTrend(s);drawDistrict(s);drawType(curSum);drawYearMetrics();
 }
 
 function renderRibbon(c,label){
@@ -468,8 +490,9 @@ function drawTrend(s){
   if(s.month===0){for(let m=1;m<=12;m++){const g=sum(filt(s.year,m,s.district));labels.push(SM[m]);cases.push(g.cases);treat.push(g.intoTreatment);}}
   else{for(let w=1;w<=5;w++){const g=sum(ALL.filter(r=>r.year===s.year&&r.month===s.month&&r.week===w&&(s.district==='all'||r.district===s.district)));
         labels.push('สัปดาห์ '+w);cases.push(g.cases);treat.push(g.intoTreatment);}}
+  const barColors=(s.month!==0&&s.week>0)?[1,2,3,4,5].map(w=>w===s.week?cssv('--gold'):cssv('--enf')):cssv('--enf');
   mk('cTrend',{type:'bar',data:{labels,datasets:[
-    {label:'คดีจับกุม',data:cases,backgroundColor:cssv('--enf'),borderRadius:6,maxBarThickness:36},
+    {label:'คดีจับกุม',data:cases,backgroundColor:barColors,borderRadius:6,maxBarThickness:36},
     {label:'นำเข้าบำบัด',data:treat,type:'line',borderColor:cssv('--tx'),backgroundColor:cssv('--tx'),tension:.35,borderWidth:2.6,pointRadius:3,fill:false}
   ]},options:baseOpt()});
 }
@@ -481,7 +504,7 @@ function districtChartCard(s){return`<div class="card">
   <div class="chartbox tall"><canvas id="cDist"></canvas></div></div>`;}
 function drawDistrict(s){
   if(!document.getElementById('cDist'))return;
-  const rows=DISTRICTS.map(d=>sum(filt(s.year,s.month,d)));
+  const rows=DISTRICTS.map(d=>sum(filt(s.year,s.month,d,s.week)));
   mk('cDist',{type:'bar',data:{labels:DISTRICTS,datasets:[
     {label:'คดีจับกุม',data:rows.map(r=>r.cases),backgroundColor:cssv('--enf'),borderRadius:5},
     {label:'นำเข้าบำบัด',data:rows.map(r=>r.intoTreatment),backgroundColor:cssv('--tx'),borderRadius:5}
@@ -490,7 +513,7 @@ function drawDistrict(s){
 
 /* ---------- บันทึกเหตุการณ์ (notes) ---------- */
 function notesCard(s){
-  const rows=filt(s.year,s.month,s.district).filter(r=>r.notes&&String(r.notes).trim())
+  const rows=filt(s.year,s.month,s.district,s.week).filter(r=>r.notes&&String(r.notes).trim())
             .sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
   const body=rows.length?rows.map(r=>`<div class="fitem">
     <div class="fhead"><span class="chip">${r.district}</span>
@@ -549,6 +572,55 @@ function drawYearTrend(){
       y1:{position:'right',ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{display:false},beginAtZero:true}}}});
 }
 
+/* ---------- เปรียบเทียบรายปี 4 ตัวชี้วัด ---------- */
+const YM=[
+ {key:'cases',label:'จำนวนคดี',unit:'คดี',color:'--enf',icon:'cases',tone:'enf'},
+ {key:'suspects',label:'จำนวนผู้ต้องหา',unit:'คน',color:'--watch',icon:'suspect',tone:'watch'},
+ {key:'meth',label:'ยาบ้า',unit:'เม็ด',color:'--seize',icon:'pill',tone:'seize'},
+ {key:'ice',label:'ยาไอซ์',unit:'กรัม',color:'--tx',icon:'ice',tone:'tx'}
+];
+function pctTxt(c,p){if(!p)return'<span class="flat">—</span>';const d=(c-p)/p*100;const cls=d>0?'up':d<0?'down':'flat';
+  return `<span class="${cls}" style="font-weight:600">${d>0?'▲':d<0?'▼':'—'} ${Math.abs(d).toFixed(1)}%</span>`;}
+function yearCompareSection(){
+  const yrs=[2567,2568,2569];
+  const cards=YM.map(M=>{
+    const v=yrs.map(y=>HIST[y][M.key]);
+    const d=v[1]?((v[2]-v[1])/v[1]*100):null;
+    const dcls=d===null?'flat':(d>0?'up':d<0?'down':'flat');
+    const dtxt=d===null?'—':(d>0?'▲':d<0?'▼':'—')+' '+Math.abs(d).toFixed(1)+'%';
+    return`<div class="ycard">
+      <div class="yhead"><span class="ib i-${M.tone}">${ic(M.icon)}</span><span>${M.label}</span></div>
+      <div class="yval">${nf(v[2])} <span class="ku">${M.unit}</span></div>
+      <div class="k-delta ${dcls}" style="font-size:.77rem">${dtxt} <span style="color:var(--muted);font-weight:400">เทียบปี 2568</span></div>
+      <div class="ymini"><canvas id="ym_${M.key}"></canvas></div>
+      <div class="yvals"><span>2567: <b>${nf(v[0])}</b></span><span>2568: <b>${nf(v[1])}</b></span><span>2569: <b>${nf(v[2])}</b></span></div>
+    </div>`;
+  }).join('');
+  const trow=M=>`<tr><td>${M.label} (${M.unit})</td>${[2567,2568,2569].map(y=>`<td>${nf(HIST[y][M.key])}</td>`).join('')}<td>${pctTxt(HIST[2569][M.key],HIST[2568][M.key])}</td></tr>`;
+  return`<div class="sechead">${ic('chart')} เปรียบเทียบรายปี (ปีงบประมาณ 2567–2569)</div>
+    <div class="ygrid">${cards}</div>
+    <div class="card" style="margin:16px 0 18px">
+      <h3><span style="color:var(--seize)">${ic('chart')}</span> ตารางเปรียบเทียบรายปี</h3>
+      <p class="csub">คดี / ผู้ต้องหา / ยาบ้า / ไอซ์ และอัตราเปลี่ยนแปลงปี 2569 เทียบ 2568</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>ตัวชี้วัด</th><th>ปี 2567</th><th>ปี 2568</th><th>ปี 2569</th><th>เปลี่ยนแปลง (69/68)</th></tr></thead>
+        <tbody>${YM.map(trow).join('')}</tbody>
+      </table></div>
+      <p class="note">${ic('alert')} คำนวณจากผลรวมรายอำเภอตามแผนปฏิบัติการ</p></div>`;
+}
+function drawYearMetrics(){
+  const yrs=[2567,2568,2569];
+  YM.forEach(M=>{const id='ym_'+M.key;if(!document.getElementById(id))return;
+    const base=cssv(M.color);
+    mk(id,{type:'bar',data:{labels:['2567','2568','2569'],datasets:[{data:yrs.map(y=>HIST[y][M.key]),
+      backgroundColor:[base+'66',base+'aa',base],borderRadius:5,maxBarThickness:36}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>nf(c.raw)+' '+M.unit}}},
+        scales:{x:{ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{display:false}},
+          y:{display:false,beginAtZero:true}}}});
+  });
+}
+
 /* ---------- ส่วนข้อมูลตามแผนปฏิบัติการ (ตัวเลขจริง) ---------- */
 function planSection(){
   const iceShow=v=>v?Number(v).toLocaleString('th-TH'):'-';
@@ -603,14 +675,14 @@ function planSection(){
 
 /* ---------- ตารางสรุปรายอำเภอ (ครบทุกฟิลด์) ---------- */
 function tableCard(s){
-  const rows=DISTRICTS.map(d=>({d,g:sum(filt(s.year,s.month,d))}));
-  const tot=sum(filt(s.year,s.month,'all'));
+  const rows=DISTRICTS.map(d=>({d,g:sum(filt(s.year,s.month,d,s.week))}));
+  const tot=sum(filt(s.year,s.month,'all',s.week));
   const row=(name,g)=>`<tr><td>${name}</td><td>${nf(g.cases)}</td><td>${nf(g.suspects)}</td><td>${nf(g.dealers)}</td>
     <td>${nf(g.methPills)}</td><td>${g.iceGrams.toLocaleString('th-TH')}</td><td>${nf(g.intoTreatment)}</td>
     <td>${nf(g.completedTreatment)}</td><td>${nf(g.xray)}</td><td>${nf(g.psychiatric)}</td></tr>`;
   return`<div class="card" style="margin-bottom:18px">
     <h3><span style="color:var(--enf)">${ic('cases')}</span> ตารางสรุปรายอำเภอ (ครบทุกตัวชี้วัด)</h3>
-    <p class="csub">${s.month===0?'สะสมทั้งปี '+s.year:MONTHS[s.month-1]+' '+s.year}${s.district!=='all'?' • '+s.district:''}</p>
+    <p class="csub">${s.month===0?'สะสมทั้งปี '+s.year:(s.week>0?'สัปดาห์ '+s.week+' • ':'')+MONTHS[s.month-1]+' '+s.year}${s.district!=='all'?' • '+s.district:''}</p>
     <div class="tablewrap"><table>
       <thead><tr><th>อำเภอ</th><th>คดี</th><th>ผู้ต้องหา</th><th>ผู้ค้า</th><th>ยาบ้า(เม็ด)</th><th>ไอซ์(ก.)</th>
         <th>นำเข้าบำบัด</th><th>สำเร็จ</th><th>คัดกรอง</th><th>จิตเวช</th></tr></thead>
