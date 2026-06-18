@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root{
     --ink:#10203f; --ink2:#3a4a66; --line:#e4e9f2; --bg:#eaeef6; --card:#ffffff; --soft:#f4f7fc;
@@ -93,6 +95,8 @@
         background:rgba(255,255,255,.14);color:#fff;border:none;padding:8px 15px;border-radius:10px;cursor:pointer;
         display:inline-flex;align-items:center;gap:6px}
   .ai .copybtn:hover{background:rgba(255,255,255,.27)}
+  .ai .aibtns{position:absolute;top:18px;right:20px;display:flex;gap:8px;z-index:2}
+  .ai .aibtns .copybtn{position:static}
   /* ===== KPI ===== */
   .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
   @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}}
@@ -184,6 +188,38 @@
   .ycard .ymini{height:92px;margin:10px 0 8px}
   .ycard .yvals{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
   .ycard .yvals b{color:var(--ink)}
+  .subcard .subhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .subcard .subcount{font-size:.82rem;color:var(--muted)} .subcard .subcount b{font-size:1.05rem}
+  .schips{display:flex;flex-wrap:wrap;gap:8px}
+  .schip{font-size:.78rem;font-weight:600;font-family:'Kanit';padding:6px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line)}
+  .schip .ic{font-size:.95rem}
+  .schip.ok{background:var(--txbg);color:var(--tx);border-color:transparent}
+  .schip.miss{background:var(--soft);color:var(--muted)}
+  .leaflet-tooltip{font-family:'Sarabun',sans-serif;font-size:.8rem}
+  /* ===== TABLET ===== */
+  @media(max-width:1024px){
+    .wrap{max-width:100%}
+    .kpis{grid-template-columns:repeat(3,1fr)}
+    .ygrid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:860px){
+    .row.r2,.row.r2b{grid-template-columns:1fr}
+  }
+  /* ===== PRINT (รายงาน PDF) ===== */
+  @media print{
+    @page{size:A4 landscape;margin:9mm}
+    body{background:#fff}
+    body *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .htools,.live,.hbtn,.updtxt{display:none!important}
+    .hero{box-shadow:none;border-radius:0}
+    .filters{box-shadow:none;border:none}
+    .card,.ai,.kpi,.ycard{box-shadow:none;break-inside:avoid}
+    #map,details,.feed{display:none!important}
+    .chartbox{height:220px}
+    .row.r2,.row.r2b{grid-template-columns:1fr 1fr!important}
+    .ygrid{grid-template-columns:repeat(4,1fr)!important}
+    .kpis{grid-template-columns:repeat(3,1fr)!important}
+  }
   /* ===== MOBILE ===== */
   @media(max-width:600px){
     .wrap{padding:0 12px 56px}
@@ -195,6 +231,7 @@
     .rcell{flex:1 1 calc(50% - 5px);padding:10px 12px}
     .rcell .rv{font-size:1.12rem}
     .ai{padding:18px 15px}
+    .ai .aibtns{position:static;margin-bottom:12px;flex-wrap:wrap}
     .ai .copybtn{position:static;margin:0 0 12px}
     .ai h2{font-size:.98rem;flex-wrap:wrap;gap:8px}
     .ai .period{padding-left:0}
@@ -230,6 +267,7 @@
       <span class="live"><span class="pulse"></span><span id="liveTxt">กำลังเชื่อมต่อ…</span></span>
       <button class="hbtn" onclick="refresh(true)"><span id="sh_refresh"></span>รีเฟรช</button>
       <button class="hbtn" onclick="exportCSV()"><span id="sh_dl"></span>CSV</button>
+      <button class="hbtn" onclick="window.print()"><span id="sh_pdf"></span>รายงาน PDF</button>
       <button class="hbtn" onclick="toggleTheme()" id="themeBtn"><span id="sh_moon"></span></button>
       <a class="hbtn" href="import.html">⬆ นำเข้า Excel</a>
       <a class="hbtn cta" href="input.html"><span id="sh_pen"></span>กรอกข้อมูล</a>
@@ -321,11 +359,13 @@ const IC={
  pen:'<path d="m14.5 4.5 4.9 4.9M4 20l1.2-4.4L16 4.9a1.6 1.6 0 0 1 2.3 0l1.9 1.9a1.6 1.6 0 0 1 0 2.3L9.4 18.8 4 20Z"/>',
  note:'<path d="M5 3.5h10l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19Z"/><path d="M14.5 3.5V8H19"/><path d="M8.5 13h7M8.5 16.5h5"/>',
  syringe:'<path d="m13 6 5 5M16 3l5 5-2 2-5-5ZM14 8 5 17l-2 4 4-2 9-9Z"/><path d="M11 11 9 9M14 8l-1.5-1.5"/>',
- calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>'
+ calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>',
+ check:'<path d="M5 13l4 4L19 7"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
 };
 function ic(n){return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${IC[n]||''}</svg>`;}
 function paintStatic(){
-  const m={sh_shield:'shield',sh_refresh:'refresh',sh_dl:'dl',sh_pen:'pen'};
+  const m={sh_shield:'shield',sh_refresh:'refresh',sh_dl:'dl',sh_pen:'pen',sh_pdf:'note'};
   for(const k in m)document.getElementById(k).innerHTML=ic(m[k]);
   document.getElementById('sh_moon').innerHTML=ic(document.body.getAttribute('data-theme')==='dark'?'sun':'moon');
 }
@@ -379,6 +419,11 @@ function sel(){return{year:+document.getElementById('fl_year').value,
                       week:+(document.getElementById('fl_week')||{value:0}).value,
                       district:document.getElementById('fl_district').value};}
 function sum(rows){const o={};FIELDS.forEach(f=>o[f]=0);rows.forEach(r=>FIELDS.forEach(f=>o[f]+=Number(r[f])||0));return o;}
+/* รวมแบบไม่ทบยอด: เก็บค่าล่าสุดต่ออำเภอ (ภาพรวมสะสม) แล้วรวมข้ามอำเภอ */
+function aggLatest(rows){const byD={};
+  rows.forEach(r=>{const t=(Number(r.year)||0)*10000+(Number(r.month)||0)*100+(Number(r.week)||0);
+    if(!byD[r.district]||t>byD[r.district]._t){byD[r.district]=Object.assign({},r,{_t:t});}});
+  const o={};FIELDS.forEach(f=>o[f]=0);Object.values(byD).forEach(r=>FIELDS.forEach(f=>o[f]+=Number(r[f])||0));return o;}
 function filt(y,m,d,w){return ALL.filter(r=>r.year===y&&(m===0||r.month===m)&&(d==='all'||r.district===d)&&(!w||r.week===w));}
 
 /* ===================== RENDER ===================== */
@@ -386,16 +431,16 @@ function render(){
   if(!document.getElementById('fl_year').options.length)buildFilters();
   const s=sel();
   const fw=document.getElementById('fl_week'); if(fw){fw.disabled=(s.month===0); if(s.month===0){fw.value='0';s.week=0;}}
-  const cur=filt(s.year,s.month,s.district,s.week),curSum=sum(cur);
+  const cur=filt(s.year,s.month,s.district,s.week),curSum=aggLatest(cur);
   let prevSum,prevLabel,curLabel;
-  if(s.month===0){const py=s.year-1;prevSum=sum(filt(py,0,s.district));prevLabel='ปี '+py;curLabel='ปี '+s.year;}
+  if(s.month===0){const py=s.year-1;prevSum=aggLatest(filt(py,0,s.district));prevLabel='ปี '+py;curLabel='ปี '+s.year;}
   else if(s.week>0){curLabel='สัปดาห์ '+s.week+' • '+MONTHS[s.month-1]+' '+s.year;
        const pw=s.week-1;
-       if(pw>=1){prevSum=sum(filt(s.year,s.month,s.district,pw));prevLabel='สัปดาห์ '+pw;}
+       if(pw>=1){prevSum=aggLatest(filt(s.year,s.month,s.district,pw));prevLabel='สัปดาห์ '+pw;}
        else{prevSum=sum([]);prevLabel='—';}}
-  else{const pm=s.month-1;prevSum=pm>=1?sum(filt(s.year,pm,s.district,0)):sum([]);
+  else{const pm=s.month-1;prevSum=pm>=1?aggLatest(filt(s.year,pm,s.district,0)):aggLatest([]);
        prevLabel=pm>=1?SM[pm]+' '+s.year:'—';curLabel=MONTHS[s.month-1]+' '+s.year;}
-  const yearRows=filt(s.year,0,s.district,0),ySum=sum(yearRows);
+  const yearRows=filt(s.year,0,s.district,0),ySum=aggLatest(yearRows);
 
   renderRibbon(curSum,curLabel);
 
@@ -403,15 +448,16 @@ function render(){
     ${aiSummary(s,curSum,prevSum,curLabel,prevLabel,ySum,cur)}
     <div class="sechead">${ic('chart')} ตัวชี้วัดภาพรวม — ${curLabel}${s.district!=='all'?' • '+s.district:''}</div>
     ${kpiCards(curSum,prevSum)}
+    ${submissionCard(s)}
     <div class="row r2">${goalCard(s,yearRows)}${trendCard(s)}</div>
-    <div class="row r2b">${districtChartCard(s)}${typeCompareCard()}</div>
-    ${notesCard(s)}
+    <div class="row r2b">${districtChartCard(s)}${mapCard()}</div>
+    <div class="row r2b">${typeCompareCard()}${notesCard(s)}</div>
     ${yearCompareSection()}
     ${planSection()}
     ${tableCard(s)}
     ${rawCard()}
   `;
-  drawTrend(s);drawDistrict(s);drawType(curSum);drawYearMetrics();
+  drawTrend(s);drawDistrict(s);drawType(curSum);drawYearMetrics();drawMap(s);
 }
 
 function renderRibbon(c,label){
@@ -451,8 +497,8 @@ function kpiCards(c,p){return`<div class="kpis">
 
 /* ---------- เป้าหมาย ---------- */
 function goalCard(s,yearRows){
-  const byD=d=>sum(yearRows.filter(r=>r.district===d));
-  const dealTot=sum(yearRows).dealers,treatTot=sum(yearRows).intoTreatment;
+  const byD=d=>aggLatest(yearRows.filter(r=>r.district===d));
+  const dealTot=aggLatest(yearRows).dealers,treatTot=aggLatest(yearRows).intoTreatment;
   const tgtDeal=s.district==='all'?TARGET_SUM.dealers:(TARGET.dealers[s.district]||0);
   const tgtTreat=s.district==='all'?TARGET_SUM.treat:(TARGET.treat[s.district]||0);
   const pD=tgtDeal?Math.min(dealTot/tgtDeal*100,100):0,pT=tgtTreat?Math.min(treatTot/tgtTreat*100,100):0;
@@ -487,7 +533,7 @@ function trendCard(s){return`<div class="card">
 function drawTrend(s){
   const ctx=document.getElementById('cTrend');if(!ctx)return;
   let labels=[],cases=[],treat=[];
-  if(s.month===0){for(let m=1;m<=12;m++){const g=sum(filt(s.year,m,s.district));labels.push(SM[m]);cases.push(g.cases);treat.push(g.intoTreatment);}}
+  if(s.month===0){for(let m=1;m<=12;m++){const g=aggLatest(filt(s.year,m,s.district));labels.push(SM[m]);cases.push(g.cases);treat.push(g.intoTreatment);}}
   else{for(let w=1;w<=5;w++){const g=sum(ALL.filter(r=>r.year===s.year&&r.month===s.month&&r.week===w&&(s.district==='all'||r.district===s.district)));
         labels.push('สัปดาห์ '+w);cases.push(g.cases);treat.push(g.intoTreatment);}}
   const barColors=(s.month!==0&&s.week>0)?[1,2,3,4,5].map(w=>w===s.week?cssv('--gold'):cssv('--enf')):cssv('--enf');
@@ -504,7 +550,7 @@ function districtChartCard(s){return`<div class="card">
   <div class="chartbox tall"><canvas id="cDist"></canvas></div></div>`;}
 function drawDistrict(s){
   if(!document.getElementById('cDist'))return;
-  const rows=DISTRICTS.map(d=>sum(filt(s.year,s.month,d,s.week)));
+  const rows=DISTRICTS.map(d=>aggLatest(filt(s.year,s.month,d,s.week)));
   mk('cDist',{type:'bar',data:{labels:DISTRICTS,datasets:[
     {label:'คดีจับกุม',data:rows.map(r=>r.cases),backgroundColor:cssv('--enf'),borderRadius:5},
     {label:'นำเข้าบำบัด',data:rows.map(r=>r.intoTreatment),backgroundColor:cssv('--tx'),borderRadius:5}
@@ -612,8 +658,9 @@ function drawYearMetrics(){
   const yrs=[2567,2568,2569];
   YM.forEach(M=>{const id='ym_'+M.key;if(!document.getElementById(id))return;
     const base=cssv(M.color);
-    mk(id,{type:'bar',data:{labels:['2567','2568','2569'],datasets:[{data:yrs.map(y=>HIST[y][M.key]),
-      backgroundColor:[base+'66',base+'aa',base],borderRadius:5,maxBarThickness:36}]},
+    mk(id,{type:'line',data:{labels:['2567','2568','2569'],datasets:[{data:yrs.map(y=>HIST[y][M.key]),
+      borderColor:base,backgroundColor:base+'22',tension:.3,borderWidth:2.6,fill:true,
+      pointRadius:4,pointBackgroundColor:base,pointBorderColor:'#fff',pointBorderWidth:1.5}]},
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>nf(c.raw)+' '+M.unit}}},
         scales:{x:{ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{display:false}},
@@ -675,8 +722,8 @@ function planSection(){
 
 /* ---------- ตารางสรุปรายอำเภอ (ครบทุกฟิลด์) ---------- */
 function tableCard(s){
-  const rows=DISTRICTS.map(d=>({d,g:sum(filt(s.year,s.month,d,s.week))}));
-  const tot=sum(filt(s.year,s.month,'all',s.week));
+  const rows=DISTRICTS.map(d=>({d,g:aggLatest(filt(s.year,s.month,d,s.week))}));
+  const tot=aggLatest(filt(s.year,s.month,'all',s.week));
   const row=(name,g)=>`<tr><td>${name}</td><td>${nf(g.cases)}</td><td>${nf(g.suspects)}</td><td>${nf(g.dealers)}</td>
     <td>${nf(g.methPills)}</td><td>${g.iceGrams.toLocaleString('th-TH')}</td><td>${nf(g.intoTreatment)}</td>
     <td>${nf(g.completedTreatment)}</td><td>${nf(g.xray)}</td><td>${nf(g.psychiatric)}</td></tr>`;
@@ -708,6 +755,69 @@ function rawCard(){
       <tbody>${body}</tbody></table></div></div></details>`;
 }
 
+/* ---------- สถานะการส่งข้อมูลรายสัปดาห์ ---------- */
+function submissionCard(s){
+  const scope=filt(s.year,s.month,'all',s.week);
+  let maxT=-1,per=null;
+  scope.forEach(r=>{const t=r.year*10000+r.month*100+r.week;if(t>maxT){maxT=t;per={y:r.year,m:r.month,w:r.week};}});
+  let chips,done=0,perLabel='—';
+  if(!per){chips=DISTRICTS.map(d=>`<span class="schip miss">${ic('clock')} ${d}</span>`).join('');}
+  else{
+    perLabel=`${SM[per.m]} ${per.y} • สัปดาห์ ${per.w}`;
+    const sub=new Set(scope.filter(r=>r.year===per.y&&r.month===per.m&&r.week===per.w).map(r=>r.district));
+    done=sub.size;
+    chips=DISTRICTS.map(d=>sub.has(d)
+      ?`<span class="schip ok">${ic('check')} ${d}</span>`
+      :`<span class="schip miss">${ic('clock')} ${d}</span>`).join('');
+  }
+  const pctDone=Math.round(done/DISTRICTS.length*100);
+  return`<div class="card subcard">
+    <div class="subhead">
+      <h3 style="margin:0"><span style="color:var(--tx)">${ic('check')}</span> สถานะการส่งข้อมูลรายสัปดาห์</h3>
+      <div class="subcount"><b style="color:${done===6?'var(--tx)':done>0?'var(--watch)':'var(--enf)'}">${done}/6</b> อำเภอ • รอบ ${perLabel}</div>
+    </div>
+    <div class="track" style="margin:10px 0 14px"><div class="fill tx" style="width:${pctDone}%"></div></div>
+    <div class="schips">${chips}</div></div>`;
+}
+
+/* ---------- แผนที่รายอำเภอ (choropleth) ---------- */
+let GEO=null;
+function mapCard(){return`<div class="card">
+  <h3><span style="color:var(--seize)">${ic('building')}</span> แผนที่ความเข้มข้นรายอำเภอ</h3>
+  <p class="csub">จำนวนคดีจับกุม (เข้ม=มาก) • แตะพื้นที่เพื่อดูรายละเอียด</p>
+  <div id="map" style="height:340px;border-radius:12px;overflow:hidden;border:1px solid var(--line)"></div>
+  <p class="note" id="mapNote" style="display:none">${ic('alert')} ไม่สามารถโหลดขอบเขตอำเภอได้ในขณะนี้ (ต้องมีอินเทอร์เน็ต)</p></div>`;}
+function valByDistrict(s){const o={};DISTRICTS.forEach(d=>{o[d]=aggLatest(filt(s.year,s.month,d,s.week)).cases;});return o;}
+function colorFor(v,max){if(!v)return'#e7ecf5';const t=max?Math.min(v/max,1):0;
+  const stops=[[255,237,160],[254,178,76],[240,59,32],[150,20,15]];
+  const seg=Math.min(Math.floor(t*3),2),fr=(t*3)-seg,a=stops[seg],b=stops[seg+1];
+  const c=a.map((x,i)=>Math.round(x+(b[i]-x)*fr));return`rgb(${c[0]},${c[1]},${c[2]})`;}
+function styleMatch(props){const vals=Object.values(props).map(v=>String(v).trim());
+  for(const d of DISTRICTS){if(vals.some(v=>v===d||v==='อำเภอ'+d||v.replace('อ.','').trim()===d))return d;}return null;}
+async function drawMap(s){
+  const el=document.getElementById('map');if(!el||el._leaflet_id||typeof L==='undefined')return;
+  const map=L.map(el,{scrollWheelZoom:false,attributionControl:false}).setView([17.22,102.44],9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(map);
+  setTimeout(()=>map.invalidateSize(),250);
+  try{
+    if(!GEO){
+      const res=await fetch('https://raw.githubusercontent.com/pcrete/gsvloader-demo/master/geojson/Amphoe.geojson');
+      const all=await res.json();
+      let fts=all.features.filter(ft=>Object.values(ft.properties).some(v=>String(v).trim()==='หนองบัวลำภู'));
+      if(!fts.length)fts=all.features.filter(ft=>styleMatch(ft.properties));
+      GEO={type:'FeatureCollection',features:fts};
+    }
+    if(!GEO.features.length){document.getElementById('mapNote').style.display='block';return;}
+    const vmap=valByDistrict(s),max=Math.max(1,...Object.values(vmap));
+    const layer=L.geoJSON(GEO,{
+      style:ft=>{const d=styleMatch(ft.properties);return{fillColor:colorFor(d?vmap[d]:0,max),weight:1.3,color:'#fff',fillOpacity:.85};},
+      onEachFeature:(ft,ly)=>{const d=styleMatch(ft.properties);if(d){const g=aggLatest(filt(s.year,s.month,d,s.week));
+        ly.bindTooltip(`<b>${d}</b><br>คดี ${nf(g.cases)} • บำบัด ${nf(g.intoTreatment)}<br>ยาบ้า ${nf(g.methPills)} เม็ด`,{sticky:true});}}
+    }).addTo(map);
+    try{map.fitBounds(layer.getBounds(),{padding:[12,12]});}catch(e){}
+  }catch(e){const n=document.getElementById('mapNote');if(n)n.style.display='block';}
+}
+
 /* ===================== AI สรุป ===================== */
 function aiSummary(s,c,p,curLabel,prevLabel,ySum,curRows){
   const lines=[],plain=[];const has=curRows.length>0;
@@ -722,7 +832,7 @@ function aiSummary(s,c,p,curLabel,prevLabel,ySum,curRows){
       plain.push(`เทียบ ${prevLabel}: คดี ${arrowT(dc)}${absT(dc)}, บำบัด ${arrowT(dt)}${absT(dt)}`);
     }
     if(s.district==='all'){
-      const byD=DISTRICTS.map(d=>({d,g:sum(curRows.filter(r=>r.district===d))}));
+      const byD=DISTRICTS.map(d=>({d,g:aggLatest(curRows.filter(r=>r.district===d))}));
       const tc=[...byD].sort((a,b)=>b.g.cases-a.g.cases)[0],tt=[...byD].sort((a,b)=>b.g.intoTreatment-a.g.intoTreatment)[0];
       if(tc.g.cases>0)lines.push({t:`พื้นที่จับกุมสูงสุด: <span class="hl">${tc.d}</span> (${nf(tc.g.cases)} คดี) • นำเข้าบำบัดสูงสุด: <span class="hl">${tt.d}</span> (${nf(tt.g.intoTreatment)} คน)`});
       if(tc.g.cases>0)plain.push(`จับกุมสูงสุด: ${tc.d} ${nf(tc.g.cases)} คดี | บำบัดสูงสุด: ${tt.d} ${nf(tt.g.intoTreatment)} คน`);
@@ -741,13 +851,31 @@ function aiSummary(s,c,p,curLabel,prevLabel,ySum,curRows){
     if(ev.length){lines.push({t:`เหตุการณ์สำคัญ: ${ev.slice(0,3).join(' / ')}${ev.length>3?' …':''}`});plain.push('เหตุการณ์สำคัญ: '+ev.slice(0,3).join(' / '));}
   }
   window.__plain=`สรุปสถานการณ์ยาเสพติด จ.หนองบัวลำภู — ${curLabel} (${scope})\n`+plain.map(x=>'• '+x).join('\n')+`\n(ออกรายงานโดยระบบแดชบอร์ด ${new Date().toLocaleString('th-TH')})`;
+  window.__aiStats={ช่วงเวลา:curLabel,พื้นที่:scope,คดีจับกุม:c.cases,ผู้ต้องหา:c.suspects,ผู้ค้ารายสำคัญ:c.dealers,
+    ยาบ้าเม็ด:c.methPills,ไอซ์กรัม:c.iceGrams,นำเข้าบำบัด:c.intoTreatment,สำเร็จบำบัด:c.completedTreatment,
+    คัดกรอง:c.xray,จิตเวช:c.psychiatric,สะสมผู้ค้าทั้งปี:ySum.dealers,สะสมบำบัดทั้งปี:ySum.intoTreatment};
   return`<div class="ai">
-    <button class="copybtn" onclick="copyReport()">${ic('note')} คัดลอกรายงาน</button>
+    <div class="aibtns">
+      <button class="copybtn" onclick="copyReport()">${ic('note')} คัดลอก</button>
+      <button class="copybtn" onclick="aiAdvanced(this)">${ic('ai')} สรุปด้วย AI ขั้นสูง</button>
+    </div>
     <h2><span class="iccirc">${ic('ai')}</span> บทสรุปผู้บริหาร <span class="badge">AI วิเคราะห์อัตโนมัติ</span></h2>
     <p class="period">${curLabel} • ${scope}</p>
-    <div class="body">${lines.map(l=>`<span class="ln${l.warn?' warn':''}">${l.t}</span>`).join('')}</div></div>`;
+    <div class="body" id="aiBody">${lines.map(l=>`<span class="ln${l.warn?' warn':''}">${l.t}</span>`).join('')}</div></div>`;
 }
 function copyReport(){navigator.clipboard.writeText(window.__plain||'').then(()=>toast('คัดลอกรายงานสำหรับส่งต่อแล้ว'));}
+async function aiAdvanced(btn){
+  btn.disabled=true;const orig=btn.innerHTML;btn.innerHTML='⏳ กำลังประมวลผล...';
+  try{
+    const d=await jsonp({action:'ai',data:JSON.stringify(window.__aiStats||{})});
+    if(d.ok&&d.summary){
+      const body=document.getElementById('aiBody');
+      body.innerHTML=d.summary.split(/\n+/).filter(x=>x.trim()).map(x=>`<span class="ln">${x.replace(/[<>]/g,'')}</span>`).join('');
+      toast('สรุปด้วย AI ขั้นสูงแล้ว');
+    }else toast(d.error||'AI ขั้นสูงยังไม่พร้อม (ตั้งค่า ANTHROPIC_KEY)');
+  }catch(e){toast('เชื่อมต่อ AI ไม่สำเร็จ');}
+  finally{btn.disabled=false;btn.innerHTML=orig;}
+}
 
 /* ===================== utils ===================== */
 function pct(c,p){return p?(c-p)/p*100:null;}

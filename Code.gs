@@ -17,6 +17,12 @@
 const SHEET_ID  = '17bdbyXnql6_I0np1yn3sCTXJtGRHYdE0XnoiYEx4NTg';   // <<< ใส่ ID ชีตของคุณ
 const SHEET_NAME = 'WeeklyData';
 const DEFAULT_PIN = '654321';                         // เปลี่ยนได้ใน Script Properties
+const SUPER_PIN = '999999';                               // PIN ผู้ดูแล (กรอกได้ทุกอำเภอ) — เปลี่ยนใน Script Properties: SUPER_PIN
+// PIN ประจำอำเภอ (แต่ละอำเภอกรอกเฉพาะของตน) — แก้ได้ หรือใช้ ENTRY_PIN/SUPER_PIN แทน
+const DISTRICT_PIN = {
+  'เมืองหนองบัวลำภู':'100001','ศรีบุญเรือง':'100002','นากลาง':'100003',
+  'โนนสัง':'100004','สุวรรณคูหา':'100005','นาวัง':'100006'
+};
 
 // ลำดับคอลัมน์ในชีต (ห้ามสลับลำดับ)
 const HEADERS = [
@@ -53,6 +59,7 @@ function doGet(e) {
     else if (action === 'getOne')  out = { ok: true, row: readOne(p.year, p.month, p.week, p.district) };
     else if (action === 'save')    out = saveRow(p);
     else if (action === 'ping')    out = { ok: true, t: new Date().toISOString() };
+    else if (action === 'ai')      out = llmSummary(p);
     else out = { ok: false, error: 'unknown action' };
   } catch (err) {
     out = { ok: false, error: String(err) };
@@ -89,8 +96,7 @@ function readOne(year, month, week, district) {
 
 /* ---------- บันทึก (upsert ไม่ทบยอด) ---------- */
 function saveRow(p) {
-  const pin = PropertiesService.getScriptProperties().getProperty('ENTRY_PIN') || DEFAULT_PIN;
-  if (String(p.pin) !== String(pin)) return { ok: false, error: 'PIN ไม่ถูกต้อง' };
+  if (!checkPin(p.pin, p.district)) return { ok: false, error: 'PIN ไม่ถูกต้อง หรือไม่มีสิทธิ์ในอำเภอนี้' };
 
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -120,6 +126,49 @@ function saveRow(p) {
     }
   } finally {
     lock.releaseLock();
+  }
+}
+
+/* ---------- ตรวจสิทธิ์ PIN (ผู้ดูแล / รายอำเภอ / ENTRY_PIN เดิม) ---------- */
+function checkPin(pin, district) {
+  pin = String(pin || '');
+  const props = PropertiesService.getScriptProperties();
+  const superPin = props.getProperty('SUPER_PIN') || SUPER_PIN;
+  const entryPin = props.getProperty('ENTRY_PIN') || DEFAULT_PIN;
+  if (pin === String(superPin)) return true;       // ผู้ดูแลทำได้ทุกอำเภอ
+  if (pin === String(entryPin)) return true;       // PIN กลางเดิม (ใช้งานต่อได้)
+  const dp = props.getProperty('PIN_' + district) || DISTRICT_PIN[district];  // PIN ประจำอำเภอ
+  if (dp && pin === String(dp)) return true;
+  return false;
+}
+
+/* ---------- สรุปด้วย AI ขั้นสูง (LLM ผ่าน Anthropic API) ----------
+ * เปิดใช้: ตั้งค่า Script Properties คีย์ ANTHROPIC_KEY = <API key ของคุณ>
+ * ถ้าไม่ตั้งค่า จะแจ้งว่ายังไม่พร้อม (แดชบอร์ดจะใช้สรุปแบบ rule-based แทน) */
+function llmSummary(p) {
+  const key = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_KEY');
+  if (!key) return { ok: false, error: 'ยังไม่ได้ตั้งค่า ANTHROPIC_KEY ใน Script Properties' };
+  let stats = {};
+  try { stats = JSON.parse(p.data || '{}'); } catch (e) {}
+  const prompt = 'คุณเป็นนักวิเคราะห์ข้อมูลของศูนย์อำนวยการป้องกันและปราบปรามยาเสพติด จังหวัดหนองบัวลำภู '
+    + 'จงเขียนบทสรุปผู้บริหารภาษาไทยกระชับ 4-6 บรรทัด จากข้อมูลสถานการณ์ต่อไปนี้ '
+    + 'เน้นแนวโน้ม จุดที่ต้องเร่งรัด และข้อเสนอเชิงนโยบายสั้น ๆ (ห้ามแต่งตัวเลขเกินจากข้อมูล):\n'
+    + JSON.stringify(stats, null, 2);
+  try {
+    const res = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      payload: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001', max_tokens: 600,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = JSON.parse(res.getContentText());
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    if (!text) return { ok: false, error: 'AI ไม่ตอบกลับ', raw: data };
+    return { ok: true, summary: text };
+  } catch (err) {
+    return { ok: false, error: String(err) };
   }
 }
 

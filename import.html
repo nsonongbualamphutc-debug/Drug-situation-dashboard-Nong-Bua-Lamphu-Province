@@ -44,7 +44,8 @@
   .fchip.miss{background:#f1f3f7;color:var(--muted)}
   /* kpi */
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
-  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:1024px){.wrap{max-width:100%}}
+  @media(max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:15px 16px;display:flex;gap:12px;align-items:center}
   .kpi .ib{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex:none}
   .kpi .ib svg{width:21px;height:21px}

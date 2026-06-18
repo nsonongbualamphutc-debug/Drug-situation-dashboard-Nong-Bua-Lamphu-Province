@@ -30,7 +30,8 @@
   .card .sub{color:var(--muted);font-size:.82rem;margin:0 0 16px}
   .grid{display:grid;gap:14px}
   .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
-  @media(max-width:760px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
+  @media(max-width:1024px){.wrap{max-width:100%}}
+  @media(max-width:860px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
   @media(max-width:480px){.g4,.g3,.g2{grid-template-columns:1fr}}
   label{display:block;font-size:.8rem;font-weight:600;color:var(--ink2);margin-bottom:6px}
   label .hint{font-weight:400;color:var(--muted)}
