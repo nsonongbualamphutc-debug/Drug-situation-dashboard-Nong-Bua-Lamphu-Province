@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>นำเข้าข้อมูล Excel • สถานการณ์ยาเสพติด หนองบัวลำภู</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--ink:#10203f;--ink2:#3a4a66;--line:#e4e9f2;--bg:#eaeef6;--card:#fff;--soft:#f4f7fc;
+    --navy:#0f1d3d;--navy2:#1b2f5e;--enf:#c0392b;--tx:#0e8a6b;--watch:#cf8a1e;--seize:#2f6fb0;--muted:#6c7689;--gold:#d8a64a;
+    --radius:16px;--shadow:0 1px 2px rgba(16,32,63,.06),0 12px 30px rgba(16,32,63,.08)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:'Sarabun',sans-serif;color:var(--ink)}
+  .ic{width:1em;height:1em;vertical-align:-.14em}
+  .hero{background:radial-gradient(120% 140% at 85% -10%,rgba(216,166,74,.2),transparent 45%),linear-gradient(135deg,var(--navy),var(--navy2));
+        color:#eef3ff;padding:20px 24px;border-radius:0 0 24px 24px;box-shadow:0 16px 38px rgba(15,29,61,.26)}
+  .hbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:1280px;margin:0 auto}
+  .crest{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#fff,#dfe7f7);display:grid;place-items:center;
+         color:var(--navy);font-family:'Kanit';font-weight:700;font-size:19px}
+  .htxt h1{font-family:'Kanit';font-weight:700;font-size:clamp(1.1rem,4vw,1.4rem);margin:0}
+  .htxt p{margin:3px 0 0;color:#aebede;font-size:.83rem}
+  .htools{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
+  .hbtn{font-family:'Kanit';font-weight:600;font-size:.83rem;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);
+        color:#eaf0ff;padding:8px 14px;border-radius:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .hbtn:hover{background:rgba(255,255,255,.16)} .hbtn.cta{background:var(--gold);color:#3a2a08;border-color:var(--gold)}
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 16px 70px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px}
+  .card h3{font-family:'Kanit';font-weight:600;font-size:1.02rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .card .csub{color:var(--muted);font-size:.8rem;margin:0 0 14px}
+  /* dropzone */
+  .drop{border:2.5px dashed #c3cee2;border-radius:18px;background:var(--card);padding:40px 24px;text-align:center;
+        cursor:pointer;transition:.2s;box-shadow:var(--shadow)}
+  .drop:hover,.drop.over{border-color:var(--navy2);background:#f0f4fb}
+  .drop .big{font-family:'Kanit';font-weight:600;font-size:1.15rem;margin:10px 0 4px}
+  .drop .sm{color:var(--muted);font-size:.86rem}
+  .drop .upic{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--navy2),var(--navy));
+        display:grid;place-items:center;margin:0 auto;color:#fff}
+  .drop .upic svg{width:30px;height:30px}
+  .found{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .fchip{font-size:.76rem;font-weight:600;font-family:'Kanit';padding:5px 12px;border-radius:20px;background:#e6f6f0;color:var(--tx);display:inline-flex;align-items:center;gap:6px}
+  .fchip.miss{background:#f1f3f7;color:var(--muted)}
+  /* kpi */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:15px 16px;display:flex;gap:12px;align-items:center}
+  .kpi .ib{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex:none}
+  .kpi .ib svg{width:21px;height:21px}
+  .kpi .kl{font-size:.78rem;color:var(--muted);font-weight:600}
+  .kpi .kv{font-family:'Kanit';font-weight:700;font-size:1.5rem;line-height:1.1;font-variant-numeric:tabular-nums}
+  .kpi .ku{font-size:.7rem;color:var(--muted);font-weight:400}
+  .i-enf{background:#fdeceb;color:var(--enf)}.i-tx{background:#e6f6f0;color:var(--tx)}
+  .i-watch{background:#fbf2dd;color:var(--watch)}.i-seize{background:#e8f1fa;color:var(--seize)}
+  .row{display:grid;gap:16px;margin-bottom:18px;grid-template-columns:1fr 1fr}
+  @media(max-width:900px){.row{grid-template-columns:1fr}}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:var(--soft);color:var(--ink2);font-weight:600;font-family:'Kanit'}
+  tfoot td{font-weight:700;background:var(--soft)}
+  .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;max-height:420px}
+  .chartbox{position:relative;height:300px}
+  .goal{margin-bottom:14px}.goal .gl{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px;font-weight:600}
+  .track{height:12px;background:var(--soft);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+  .fill{height:100%;border-radius:20px}
+  .btn{font-family:'Kanit';font-weight:600;font-size:.92rem;padding:11px 22px;border-radius:11px;border:none;cursor:pointer}
+  .btn-primary{background:var(--navy2);color:#fff}.btn-primary:hover{background:var(--navy)}.btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink2)}
+  input[type=password],input[type=text]{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:.92rem}
+  .prog{height:8px;background:var(--soft);border-radius:10px;overflow:hidden;margin-top:10px}
+  .progbar{height:100%;background:var(--tx);width:0;transition:.3s}
+  .status{font-size:.85rem;font-weight:600;margin-top:8px}
+  .ok{color:var(--tx)}.err{color:var(--enf)}.muted{color:var(--muted)}
+  .hidden{display:none}
+  .note{font-size:.77rem;color:var(--muted);margin-top:8px;line-height:1.5}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 22px;border-radius:11px;font-size:.86rem;opacity:0;transition:.25s;z-index:50;pointer-events:none;font-weight:600}
+  .toast.show{opacity:1}
+  @media(max-width:600px){.wrap{padding:16px 12px 56px}.card{padding:16px 15px}.kpi .kv{font-size:1.3rem}.chartbox{height:250px}}
+</style>
+</head>
+<body>
+<div class="hero"><div class="hbar">
+  <div class="crest">นภ</div>
+  <div class="htxt"><h1>นำเข้าข้อมูลจาก Excel</h1><p>อัปโหลดไฟล์แม่แบบ แล้วระบบจะแสดงผลเป็นแดชบอร์ดทันที</p></div>
+  <div class="htools">
+    <a class="hbtn" href="index.html">📊 แดชบอร์ด</a>
+    <a class="hbtn cta" href="input.html">✎ กรอกทีละสัปดาห์</a>
+  </div>
+</div></div>
+
+<div class="wrap">
+  <div class="card" style="background:#fbfcfe">
+    <h3><span id="i_help"></span> ขั้นตอน</h3>
+    <p class="csub">1) ดาวน์โหลดไฟล์แม่แบบ "แม่แบบข้อมูลยาเสพติด-หนองบัวลำภู.xlsx" → 2) กรอก/แก้ตัวเลขในแต่ละชีต → 3) ลากไฟล์มาวางด้านล่าง ระบบจะแสดงผลทันที</p>
+    <div class="drop" id="drop">
+      <input type="file" id="file" accept=".xlsx,.xls" class="hidden">
+      <div class="upic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0 4 4m-4-4-4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
+      <div class="big">ลากไฟล์ Excel มาวางที่นี่</div>
+      <div class="sm">หรือคลิกเพื่อเลือกไฟล์ (.xlsx) — ไฟล์ถูกอ่านในเครื่องคุณเท่านั้น</div>
+      <div class="found" id="found"></div>
+    </div>
+  </div>
+
+  <div id="result"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycbznWom8v4aRLQdHWFj6SAw-TfcPcyBhQFkpBzvYR3TM5GCvXWbRToAd_tA6YGLSvJZN/exec';
+const DIST=['เมืองหนองบัวลำภู','ศรีบุญเรือง','นากลาง','โนนสัง','สุวรรณคูหา','นาวัง'];
+let charts={},WEEKLY=[];
+
+const IC={
+ help:'<path d="M9.2 9a2.8 2.8 0 1 1 3.8 2.6c-.9.4-1.5 1-1.5 2"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/>',
+ shield:'<path d="M12 2 4 6v6c0 5 3.4 8.3 8 10 4.6-1.7 8-5 8-10V6Z"/>',
+ pill:'<rect x="2.8" y="9" width="18.4" height="6" rx="3" transform="rotate(45 12 12)"/><path d="m8.6 8.6 6.8 6.8"/>',
+ ice:'<path d="M12 2 4 7v10l8 5 8-5V7Z"/><path d="M12 2v20M4 7l16 10M20 7 4 17"/>',
+ treat:'<path d="M2.5 12.5H6l1.8-5 3.2 11 2.6-7.5L15.2 14H21.5"/>',
+ flag:'<path d="M5.5 21V3.8M5.5 4h11l-1.8 3.4L16.5 11h-11"/>',
+ cases:'<path d="M7 5h10v15a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1Z"/><path d="M9 3.5h6A1.5 1.5 0 0 1 16.5 5h-9A1.5 1.5 0 0 1 9 3.5Z"/><path d="M10 11h4M10 15h4"/>',
+ send:'<path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/>',
+ ok:'<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.3 4.7-4.7"/>'
+};
+function ic(n){return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${IC[n]||''}</svg>`;}
+document.getElementById('i_help').innerHTML=ic('help');
+
+/* ---------- รับไฟล์ ---------- */
+const drop=document.getElementById('drop'),file=document.getElementById('file');
+drop.onclick=()=>file.click();
+file.onchange=e=>{if(e.target.files[0])readFile(e.target.files[0]);};
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>{if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);});
+
+function readFile(f){
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      parseAndRender(wb);
+      toast('อ่านไฟล์สำเร็จ — แสดงผลแล้ว');
+    }catch(err){toast('อ่านไฟล์ไม่สำเร็จ: '+err.message);}
+  };
+  rd.readAsArrayBuffer(f);
+}
+
+/* ---------- แปลงข้อมูล ---------- */
+const rows=ws=>XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
+const num=v=>{const n=Number(String(v).replace(/,/g,''));return isNaN(n)?0:n;};
+function findSheet(wb,kw){const n=wb.SheetNames.find(s=>s.includes(kw));return n?rows(wb.Sheets[n]):null;}
+
+function parseAndRender(wb){
+  const arrest=parseArrest(findSheet(wb,'จับกุม'));
+  const treat =parseTreat(findSheet(wb,'บำบัด'));
+  const target=parseTarget(findSheet(wb,'เป้า'));
+  const weekly=parseWeekly(findSheet(wb,'สัปดาห์'));
+  WEEKLY=weekly||[];
+
+  document.getElementById('found').innerHTML=[
+    ['ผลการจับกุม',arrest],['ผลการบำบัด',treat],['เป้าหมาย',target],['รายสัปดาห์',weekly]
+  ].map(([n,d])=>`<span class="fchip ${d&&d.length?'':'miss'}">${d&&d.length?ic('ok'):''} ${n} ${d&&d.length?'('+d.length+')':'— ไม่พบ'}</span>`).join('');
+
+  let html='';
+  html+=kpiBlock(arrest,treat,weekly);
+  if(arrest&&arrest.length)html+=arrestBlock(arrest);
+  html+='<div class="row">';
+  if(treat&&treat.length)html+=treatBlock(treat);
+  if(target&&target.length)html+=targetBlock(target);
+  html+='</div>';
+  if(weekly&&weekly.length)html+=weeklyBlock(weekly);
+  document.getElementById('result').innerHTML=html;
+
+  if(arrest&&arrest.length)drawArrest(arrest);
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function parseArrest(r){if(!r)return null;const out=[];
+  r.forEach(row=>{if(DIST.includes(String(row[1]).trim())){
+    out.push({d:row[1].trim(),
+      y67:{c:num(row[2]),s:num(row[3]),m:num(row[4]),i:num(row[5])},
+      y68:{c:num(row[6]),s:num(row[7]),m:num(row[8]),i:num(row[9])},
+      y69:{c:num(row[10]),s:num(row[11]),m:num(row[12]),i:num(row[13])}});}});
+  return out;}
+function parseTreat(r){if(!r)return null;const out=[];
+  r.forEach(row=>{if(DIST.includes(String(row[1]).trim())){
+    const t69=num(row[4]),p69=num(row[5]);
+    out.push({d:row[1].trim(),p67:num(row[2]),p68:num(row[3]),t69,p69,pct:t69?p69/t69*100:0});}});
+  return out;}
+function parseTarget(r){if(!r)return null;const out=[];
+  r.forEach(row=>{if(DIST.includes(String(row[1]).trim())){
+    out.push({d:row[1].trim(),deal:num(row[2]),treat:num(row[4])});}});
+  return out;}
+function parseWeekly(r){if(!r)return null;const out=[];
+  r.forEach(row=>{if(DIST.includes(String(row[3]).trim())&&num(row[0])>0){
+    out.push({year:num(row[0]),month:num(row[1]),week:num(row[2]),district:String(row[3]).trim(),
+      cases:num(row[4]),suspects:num(row[5]),dealers:num(row[6]),methPills:num(row[7]),iceGrams:num(row[8]),
+      intoTreatment:num(row[9]),completedTreatment:num(row[10]),xray:num(row[11]),psychiatric:num(row[12]),
+      notes:String(row[13]||''),user:String(row[14]||'นำเข้า Excel')});}});
+  return out;}
+
+/* ---------- บล็อกแสดงผล ---------- */
+const nf=v=>(Number(v)||0).toLocaleString('th-TH');
+function kpi(icn,tone,l,u,v){return`<div class="kpi"><div class="ib i-${tone}">${ic(icn)}</div>
+  <div><div class="kl">${l}</div><div class="kv">${nf(v)} <span class="ku">${u}</span></div></div></div>`;}
+function kpiBlock(arrest,treat,weekly){
+  let cases=0,meth=0,ice=0,intoT=0;
+  if(weekly&&weekly.length){weekly.forEach(w=>{cases+=w.cases;meth+=w.methPills;ice+=w.iceGrams;intoT+=w.intoTreatment;});}
+  else if(arrest&&arrest.length){arrest.forEach(a=>{cases+=a.y69.c;meth+=a.y69.m;ice+=a.y69.i;});
+    if(treat)treat.forEach(t=>intoT+=t.p69);}
+  const src=weekly&&weekly.length?'จากข้อมูลรายสัปดาห์ที่นำเข้า':'จากข้อมูลตามแผน ปี 2569';
+  return`<div class="card" style="margin-bottom:14px"><h3>${ic('cases')} สรุปภาพรวม</h3><p class="csub">${src}</p>
+    <div class="kpis">
+      ${kpi('cases','enf','คดีจับกุม','คดี',cases)}
+      ${kpi('pill','seize','ยาบ้า','เม็ด',meth)}
+      ${kpi('ice','seize','ยาไอซ์','กรัม',ice)}
+      ${kpi('treat','tx','นำเข้าบำบัด','คน',intoT)}
+    </div></div>`;
+}
+function arrestBlock(a){
+  const tot=a.reduce((o,x)=>{['y67','y68','y69'].forEach(y=>{o[y].c+=x[y].c;o[y].m+=x[y].m;o[y].i+=x[y].i;});return o;},
+    {y67:{c:0,m:0,i:0},y68:{c:0,m:0,i:0},y69:{c:0,m:0,i:0}});
+  const ish=v=>v?Number(v).toLocaleString('th-TH'):'-';
+  const body=a.map(x=>`<tr><td>${x.d}</td>
+    <td>${nf(x.y67.c)}</td><td>${nf(x.y67.m)}</td><td>${ish(x.y67.i)}</td>
+    <td>${nf(x.y68.c)}</td><td>${nf(x.y68.m)}</td><td>${ish(x.y68.i)}</td>
+    <td>${nf(x.y69.c)}</td><td>${nf(x.y69.m)}</td><td>${ish(x.y69.i)}</td></tr>`).join('');
+  return`<div class="card"><h3><span style="color:var(--enf)">${ic('shield')}</span> ผลการจับกุมคดียาเสพติด รายอำเภอ</h3>
+    <p class="csub">คดี / ยาบ้า(เม็ด) / ไอซ์(กรัม) แยกตามปี</p>
+    <div class="chartbox" style="margin-bottom:16px"><canvas id="cA"></canvas></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th rowspan="2">อำเภอ</th><th colspan="3">2567</th><th colspan="3">2568</th><th colspan="3">2569</th></tr>
+      <tr><th>คดี</th><th>ยาบ้า</th><th>ไอซ์</th><th>คดี</th><th>ยาบ้า</th><th>ไอซ์</th><th>คดี</th><th>ยาบ้า</th><th>ไอซ์</th></tr></thead>
+      <tbody>${body}</tbody>
+      <tfoot><tr><td>รวม</td>
+        <td>${nf(tot.y67.c)}</td><td>${nf(tot.y67.m)}</td><td>${ish(tot.y67.i)}</td>
+        <td>${nf(tot.y68.c)}</td><td>${nf(tot.y68.m)}</td><td>${ish(tot.y68.i)}</td>
+        <td>${nf(tot.y69.c)}</td><td>${nf(tot.y69.m)}</td><td>${ish(tot.y69.i)}</td></tr></tfoot>
+    </table></div></div>`;
+}
+function drawArrest(a){
+  const ctx=document.getElementById('cA');if(!ctx)return;
+  if(charts.cA)charts.cA.destroy();
+  charts.cA=new Chart(ctx,{type:'bar',data:{labels:a.map(x=>x.d),datasets:[
+    {label:'คดี 2567',data:a.map(x=>x.y67.c),backgroundColor:'#9db4dc',borderRadius:4},
+    {label:'คดี 2568',data:a.map(x=>x.y68.c),backgroundColor:'#5b7fd6',borderRadius:4},
+    {label:'คดี 2569',data:a.map(x=>x.y69.c),backgroundColor:'#c0392b',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{family:'Sarabun',size:12},boxWidth:13,padding:12}}},
+    scales:{x:{ticks:{font:{family:'Sarabun',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Sarabun',size:10}}}}}});
+}
+function treatBlock(t){
+  const sumT=t.reduce((s,x)=>s+x.t69,0),sumP=t.reduce((s,x)=>s+x.p69,0);
+  const body=t.map(x=>{const col=x.pct>=100?'var(--tx)':x.pct<60?'var(--enf)':'var(--ink)';
+    return`<tr><td>${x.d}</td><td>${nf(x.p67)}</td><td>${nf(x.p68)}</td><td>${nf(x.t69)}</td><td>${nf(x.p69)}</td>
+      <td style="color:${col};font-weight:600">${x.pct.toFixed(2)}%</td></tr>`;}).join('');
+  const overall=sumT?sumP/sumT*100:0;
+  return`<div class="card"><h3><span style="color:var(--tx)">${ic('treat')}</span> ผลการบำบัดฟื้นฟู</h3>
+    <p class="csub">ภาพรวม ${nf(sumP)}/${nf(sumT)} คน</p>
+    <div class="goal"><div class="gl"><span>ความสำเร็จรวม</span><span style="color:var(--tx)">${overall.toFixed(1)}%</span></div>
+      <div class="track"><div class="fill" style="width:${Math.min(overall,100)}%;background:linear-gradient(90deg,#23bf95,#0e8a6b)"></div></div></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>อำเภอ</th><th>2567</th><th>2568</th><th>เป้า69</th><th>ผล69</th><th>ร้อยละ</th></tr></thead>
+      <tbody>${body}</tbody></table></div></div>`;
+}
+function targetBlock(g){
+  const sd=g.reduce((s,x)=>s+x.deal,0),st=g.reduce((s,x)=>s+x.treat,0);
+  const body=g.map(x=>`<tr><td>${x.d}</td><td>${nf(x.deal)}</td><td>${nf(x.treat)}</td></tr>`).join('');
+  return`<div class="card"><h3><span style="color:var(--watch)">${ic('flag')}</span> เป้าหมายดำเนินงาน (มิ.ย.–ก.ย. 69)</h3>
+    <p class="csub">จับกุมผู้ค้า / บำบัดฟื้นฟู</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>อำเภอ</th><th>จับกุมผู้ค้า (ราย)</th><th>บำบัด (คน)</th></tr></thead>
+      <tbody>${body}</tbody>
+      <tfoot><tr><td>รวม</td><td>${nf(sd)}</td><td>${nf(st)}</td></tr></tfoot></table></div></div>`;
+}
+function weeklyBlock(w){
+  const body=w.map(x=>`<tr><td>${x.year}/${x.month}/ส.${x.week}</td><td>${x.district}</td>
+    <td>${nf(x.cases)}</td><td>${nf(x.dealers)}</td><td>${nf(x.methPills)}</td><td>${nf(x.intoTreatment)}</td>
+    <td style="text-align:left;white-space:normal;max-width:180px">${x.notes||''}</td></tr>`).join('');
+  return`<div class="card"><h3><span style="color:var(--seize)">${ic('send')}</span> ข้อมูลรายสัปดาห์ที่นำเข้า (${w.length} แถว)</h3>
+    <p class="csub">ตรวจสอบความถูกต้อง แล้วส่งเข้าระบบ Real-time (Google Sheet) เพื่อให้แดชบอร์ดหลักอัปเดต</p>
+    <div class="tablewrap" style="margin-bottom:14px"><table>
+      <thead><tr><th>ช่วงเวลา</th><th>อำเภอ</th><th>คดี</th><th>ผู้ค้า</th><th>ยาบ้า</th><th>บำบัด</th><th>หมายเหตุ</th></tr></thead>
+      <tbody>${body}</tbody></table></div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <input type="password" id="pin" placeholder="PIN เจ้าหน้าที่" autocomplete="off">
+      <button class="btn btn-primary" id="pushBtn" onclick="pushWeekly()">${ic('send')} ส่งเข้าระบบ Real-time</button>
+      <span class="status muted" id="pushStatus">พร้อมส่ง ${w.length} รายการ</span>
+    </div>
+    <div class="prog hidden" id="progWrap"><div class="progbar" id="progBar"></div></div>
+    <p class="note">* ระบบจะบันทึกแบบเขียนทับรายสัปดาห์ (ไม่ทบยอด) — กรอกซ้ำคีย์เดิมคืออัปเดตข้อมูลเดิม</p></div>`;
+}
+
+/* ---------- ส่งเข้า Real-time ---------- */
+function jsonp(params){return new Promise((res,rej)=>{
+  const cb='cb_'+Math.random().toString(36).slice(2);
+  const q=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+  const s=document.createElement('script');let done=false;
+  window[cb]=d=>{done=true;res(d);clean();};
+  function clean(){delete window[cb];s.remove();}
+  s.onerror=()=>{if(!done){rej(new Error('net'));clean();}};
+  s.src=API+'?'+q+'&callback='+cb;document.body.appendChild(s);
+  setTimeout(()=>{if(!done){rej(new Error('timeout'));clean();}},20000);
+});}
+async function pushWeekly(){
+  const pin=document.getElementById('pin').value.trim();
+  if(!pin){setPush('กรุณากรอก PIN','err');return;}
+  const btn=document.getElementById('pushBtn');btn.disabled=true;
+  document.getElementById('progWrap').classList.remove('hidden');
+  let ok=0,fail=0;
+  for(let i=0;i<WEEKLY.length;i++){
+    const w=WEEKLY[i];
+    try{const d=await jsonp(Object.assign({action:'save',pin},w));if(d.ok)ok++;else fail++;}
+    catch(e){fail++;}
+    document.getElementById('progBar').style.width=((i+1)/WEEKLY.length*100)+'%';
+    setPush(`กำลังส่ง ${i+1}/${WEEKLY.length}…`,'muted');
+  }
+  setPush(`✓ สำเร็จ ${ok} รายการ${fail?` • ล้มเหลว ${fail}`:''}`,fail?'err':'ok');
+  btn.disabled=false;
+  toast(fail?`ส่งเสร็จ มีพลาด ${fail}`:'ส่งเข้าระบบ Real-time สำเร็จ');
+}
+function setPush(t,c){const s=document.getElementById('pushStatus');s.textContent=t;s.className='status '+(c||'muted');}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
+</script>
+</body>
+</html>

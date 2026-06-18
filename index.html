@@ -219,6 +219,7 @@
       <button class="hbtn" onclick="refresh(true)"><span id="sh_refresh"></span>รีเฟรช</button>
       <button class="hbtn" onclick="exportCSV()"><span id="sh_dl"></span>CSV</button>
       <button class="hbtn" onclick="toggleTheme()" id="themeBtn"><span id="sh_moon"></span></button>
+      <a class="hbtn" href="import.html">⬆ นำเข้า Excel</a>
       <a class="hbtn cta" href="input.html"><span id="sh_pen"></span>กรอกข้อมูล</a>
     </div>
   </div>
@@ -273,6 +274,11 @@ const PLAN_TREAT={
  'สุวรรณคูหา':     {p67:423,p68:482,t69:315,p69:379,pct:120.32},
  'นาวัง':          {p67:169,p68:232,t69:168,p69:188,pct:111.90}
 };
+/* คำนวณยอดรวมจังหวัดจากข้อมูลรายอำเภอจริง (ฐานเดียวกับไฟล์ Excel) */
+[[2567,'y67'],[2568,'y68'],[2569,'y69']].forEach(([y,k])=>{
+  let c=0,m=0,i=0;DISTRICTS.forEach(d=>{c+=PLAN_ARREST[d][k].c;m+=PLAN_ARREST[d][k].m;i+=PLAN_ARREST[d][k].i;});
+  HIST[y].cases=c;HIST[y].meth=m;HIST[y].ice=Math.round(i*100)/100;
+});
 
 const FIELDS=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric'];
 let ALL=[],charts={};
