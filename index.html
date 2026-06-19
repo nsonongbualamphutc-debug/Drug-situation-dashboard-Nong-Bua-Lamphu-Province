@@ -245,6 +245,26 @@
   @media(max-width:600px){.skel-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .chartbox.tall2{height:440px}
   @media(max-width:600px){.chartbox.tall2{height:380px}}
+  /* ===== เมนูปุ่มบนหัว (ยุบบนมือถือ) ===== */
+  .moreWrap{position:relative;display:inline-flex}
+  .menu-btn{display:none;font-size:1.15rem;line-height:1;padding:8px 13px}
+  .htools-more{display:contents}
+  @media(max-width:860px){
+    .menu-btn{display:inline-flex}
+    .htools-more{display:none;position:absolute;right:0;top:calc(100% + 8px);flex-direction:column;gap:6px;
+      background:var(--card);border:1px solid var(--line);border-radius:13px;padding:8px;min-width:194px;
+      box-shadow:0 16px 38px rgba(15,29,61,.24);z-index:60}
+    .htools-more.open{display:flex}
+    .htools-more .hbtn{width:100%;justify-content:flex-start;color:var(--ink);background:var(--soft);border-color:var(--line)}
+    .htools-more .hbtn:hover{background:var(--line)}
+  }
+  /* ===== สถานะไม่มีข้อมูล ===== */
+  .emptybox{display:flex;align-items:center;gap:13px;padding:26px 18px;border:1.5px dashed var(--line);border-radius:14px;background:var(--soft);color:var(--muted)}
+  .emptybox .eb-ic svg{width:30px;height:30px;color:var(--seize);opacity:.85;flex:none}
+  .emptybox b{display:block;font-family:'Kanit';color:var(--ink2);font-size:.98rem;margin-bottom:2px}
+  .emptybox>div span{font-size:.86rem;line-height:1.5}
+  /* ===== หัวรายงาน PDF (โชว์เฉพาะตอนพิมพ์) ===== */
+  .printhead{display:none}
   /* ===== TABLET ===== */
   @media(min-width:681px) and (max-width:1024px){
     .wrap{max-width:100%}
@@ -259,8 +279,13 @@
     @page{size:A4 landscape;margin:9mm}
     body{background:#fff}
     body *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .htools,.live,.hbtn,.updtxt{display:none!important}
-    .hero{box-shadow:none;border-radius:0}
+    .htools,.live,.hbtn,.updtxt,.menu-btn,.moreWrap{display:none!important}
+    .hero,.ribbon,.filters,.skel,.skel-kpis,.skel-chart{display:none!important}
+    .printhead{display:flex!important;align-items:center;gap:14px;padding:0 0 10px;margin:0 0 12px;border-bottom:2.5px solid var(--navy)}
+    .printhead .ph-seal{width:62px;height:62px;object-fit:contain}
+    .printhead .ph-org{font-family:'Kanit';font-weight:600;font-size:12.5px;color:#333}
+    .printhead .ph-title{font-family:'Kanit';font-weight:700;font-size:18px;color:var(--navy)}
+    .printhead .ph-sub{font-size:12px;color:#555;margin-top:3px}
     .filters{box-shadow:none;border:none}
     .card,.ai,.kpi,.ycard{box-shadow:none;break-inside:avoid}
     #map,details,.feed{display:none!important}
@@ -333,15 +358,29 @@
     <div class="htools">
       <span class="live"><span class="pulse"></span><span id="liveTxt">กำลังเชื่อมต่อ…</span></span>
       <button class="hbtn" onclick="refresh(true)"><span id="sh_refresh"></span>รีเฟรช</button>
-      <button class="hbtn" onclick="exportCSV()"><span id="sh_dl"></span>CSV</button>
-      <button class="hbtn" onclick="window.print()"><span id="sh_pdf"></span>รายงาน PDF</button>
-      <button class="hbtn" onclick="toggleFull()"><span id="sh_full"></span>เต็มจอ</button>
-      <button class="hbtn" onclick="toggleTheme()" id="themeBtn"><span id="sh_moon"></span></button>
-      <a class="hbtn" href="import.html">⬆ นำเข้า Excel</a>
       <a class="hbtn cta" href="input.html"><span id="sh_pen"></span>กรอกข้อมูล</a>
+      <div class="moreWrap">
+        <button class="hbtn menu-btn" onclick="toggleMenu(event)" aria-label="เมนูเพิ่มเติม">⋯</button>
+        <div class="htools-more" id="htmore">
+          <button class="hbtn" onclick="exportCSV()"><span id="sh_dl"></span>CSV</button>
+          <button class="hbtn" onclick="window.print()"><span id="sh_pdf"></span>รายงาน PDF</button>
+          <button class="hbtn" onclick="toggleFull()"><span id="sh_full"></span>เต็มจอ</button>
+          <button class="hbtn" onclick="toggleTheme()" id="themeBtn"><span id="sh_moon"></span></button>
+          <a class="hbtn" href="import.html">⬆ นำเข้า Excel</a>
+        </div>
+      </div>
     </div>
   </div>
   <div class="ribbon" id="ribbon"></div>
+</div>
+
+<div class="printhead" id="printHead">
+  <img src="ตราหนองบัวลำภู.png" alt="" class="ph-seal" onerror="this.style.display='none'">
+  <div>
+    <div class="ph-org">ศูนย์อำนวยการป้องกันและปราบปรามยาเสพติด จังหวัดหนองบัวลำภู (ศอ.ปส.จ.นภ.)</div>
+    <div class="ph-title">รายงานสถานการณ์ยาเสพติด จังหวัดหนองบัวลำภู</div>
+    <div class="ph-sub" id="printSub">—</div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -500,6 +539,9 @@ function aggLatest(rows){const byD={};
 function filt(y,m,d,w){return ALL.filter(r=>r.year===y&&(m===0||r.month===m)&&(d==='all'||r.district===d)&&(!w||r.week===w));}
 
 /* ===================== RENDER ===================== */
+function emptyBox(msg){return`<div class="emptybox"><span class="eb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.4h.01"/></svg></span><div><b>ยังไม่มีข้อมูลรอบนี้</b><span>${msg||'เริ่มกรอกหรือนำเข้าข้อมูลรายสัปดาห์ของช่วงที่เลือก แล้วกราฟจะแสดงผลทันที'}</span></div></div>`;}
+function toggleMenu(e){if(e)e.stopPropagation();var m=document.getElementById('htmore');if(m)m.classList.toggle('open');}
+if(typeof document!=='undefined'&&document.addEventListener){document.addEventListener('click',function(e){var m=document.getElementById('htmore');if(m&&m.classList.contains('open')&&e.target&&e.target.closest&&!e.target.closest('.moreWrap'))m.classList.remove('open');});}
 function render(){
   if(!document.getElementById('fl_year').options.length)buildFilters();
   const s=sel();
@@ -516,6 +558,7 @@ function render(){
   const yearRows=filt(s.year,0,s.district,0),ySum=aggLatest(yearRows);
 
   window.__curS=s;
+  (function(){var ph=document.getElementById('printSub');if(ph){var per=s.month===0?('ปีงบประมาณ พ.ศ. '+s.year):((s.week>0?'สัปดาห์ที่ '+s.week+' • ':'')+MONTHS[s.month-1]+' '+s.year);var dist=(s.district&&s.district!=='all')?(' • อำเภอ'+s.district):' • ทุกอำเภอ';ph.textContent='ข้อมูล: '+per+dist+' • ออกรายงานเมื่อ '+new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});}})();
   renderRibbon(curSum,curLabel);
 
   document.getElementById('content').innerHTML=`
@@ -620,10 +663,13 @@ function drawTrend(s){
 }
 
 /* ---------- รายอำเภอ ---------- */
-function districtChartCard(s){return`<div class="card">
+function districtChartCard(s){
+  const has=DISTRICTS.some(d=>{const g=aggLatest(filt(s.year,s.month,d,s.week));return (g.cases||0)+(g.intoTreatment||0)>0;});
+  const sub=s.month===0?'สะสมทั้งปี '+s.year:(s.week>0?'สัปดาห์ '+s.week+' • ':'')+MONTHS[s.month-1]+' '+s.year;
+  return`<div class="card">
   <h3><span style="color:var(--seize)">${ic('building')}</span> คดีจับกุม–บำบัด รายอำเภอ (ช่วงที่เลือก)</h3>
-  <p class="csub">${s.month===0?'สะสมทั้งปี '+s.year:(s.week>0?'สัปดาห์ '+s.week+' • ':'')+MONTHS[s.month-1]+' '+s.year}</p>
-  <div class="chartbox tall"><canvas id="cDist"></canvas></div></div>`;}
+  <p class="csub">${sub}</p>
+  ${has?`<div class="chartbox tall"><canvas id="cDist"></canvas></div>`:emptyBox()}</div>`;}
 
 
 /* ---------- บันทึกเหตุการณ์ (notes) ---------- */
@@ -892,11 +938,13 @@ function drawMap(s){
 /* ---------- อันดับอำเภอ ---------- */
 function rankCard(){const m=window.__rankMetric||'cases';
   const b=(k,l)=>`<button class="rkbtn ${m===k?'on':''}" data-m="${k}" onclick="setRank('${k}')">${l}</button>`;
+  const s=window.__curS;
+  const has=s?DISTRICTS.some(d=>(aggLatest(filt(s.year,s.month,d,s.week))[m]||0)>0):false;
   return`<div class="card"><div class="rkhead">
       <h3><span style="color:var(--watch)">${ic('flag')}</span> อันดับอำเภอ</h3>
       <div class="rkbtns">${b('cases','คดี')}${b('intoTreatment','บำบัด')}${b('methPills','ยาบ้า')}</div></div>
     <p class="csub">เรียงจากมากไปน้อยตามค่าล่าสุดในช่วงที่เลือก</p>
-    <div class="chartbox tall"><canvas id="cRank"></canvas></div></div>`;}
+    ${has?`<div class="chartbox tall"><canvas id="cRank"></canvas></div>`:emptyBox()}</div>`;}
 function setRank(m){window.__rankMetric=m;
   document.querySelectorAll('.rkbtn').forEach(x=>x.classList.toggle('on',x.dataset.m===m));drawRank(window.__curS);}
 function drawDistrict(s){
