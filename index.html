@@ -621,17 +621,10 @@ function drawTrend(s){
 
 /* ---------- รายอำเภอ ---------- */
 function districtChartCard(s){return`<div class="card">
-  <h3><span style="color:var(--seize)">${ic('building')}</span> เปรียบเทียบรายอำเภอ</h3>
-  <p class="csub">${s.month===0?'สะสมทั้งปี '+s.year:MONTHS[s.month-1]+' '+s.year}</p>
+  <h3><span style="color:var(--seize)">${ic('building')}</span> คดีจับกุม–บำบัด รายอำเภอ (ช่วงที่เลือก)</h3>
+  <p class="csub">${s.month===0?'สะสมทั้งปี '+s.year:(s.week>0?'สัปดาห์ '+s.week+' • ':'')+MONTHS[s.month-1]+' '+s.year}</p>
   <div class="chartbox tall"><canvas id="cDist"></canvas></div></div>`;}
-function drawDistrict(s){
-  if(!document.getElementById('cDist'))return;
-  const rows=DISTRICTS.map(d=>aggLatest(filt(s.year,s.month,d,s.week)));
-  mk('cDist',{type:'bar',data:{labels:DISTRICTS,datasets:[
-    {label:'คดีจับกุม',data:rows.map(r=>r.cases),backgroundColor:cssv('--enf'),borderRadius:5},
-    {label:'นำเข้าบำบัด',data:rows.map(r=>r.intoTreatment),backgroundColor:cssv('--tx'),borderRadius:5}
-  ]},options:baseOpt({indexAxis:'y'})});
-}
+
 
 /* ---------- บันทึกเหตุการณ์ (notes) ---------- */
 function notesCard(s){
@@ -906,11 +899,22 @@ function rankCard(){const m=window.__rankMetric||'cases';
     <div class="chartbox tall"><canvas id="cRank"></canvas></div></div>`;}
 function setRank(m){window.__rankMetric=m;
   document.querySelectorAll('.rkbtn').forEach(x=>x.classList.toggle('on',x.dataset.m===m));drawRank(window.__curS);}
+function drawDistrict(s){
+  if(!document.getElementById('cDist'))return;
+  const rows=DISTRICTS.map(d=>aggLatest(filt(s.year,s.month,d,s.week)));
+  mk('cDist',{type:'bar',data:{labels:DISTRICTS.map(DSHORT),datasets:[
+    {label:'คดีจับกุม',data:rows.map(r=>r.cases),backgroundColor:cssv('--enf'),borderRadius:5,maxBarThickness:18},
+    {label:'นำเข้าบำบัด',data:rows.map(r=>r.intoTreatment),backgroundColor:cssv('--tx'),borderRadius:5,maxBarThickness:18}
+  ]},options:baseOpt({indexAxis:'y',
+    plugins:{legend:{display:true,labels:{font:{family:'Sarabun',size:11},color:cssv('--ink2'),boxWidth:12,padding:10}}},
+    scales:{x:{beginAtZero:true,ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{color:cssv('--line')}},y:catY()}})});
+}
 function drawRank(s){if(!s||!document.getElementById('cRank'))return;const m=window.__rankMetric||'cases';
   const arr=DISTRICTS.map(d=>({d,v:aggLatest(filt(s.year,s.month,d,s.week))[m]||0})).sort((a,b)=>b.v-a.v);
-  mk('cRank',{type:'bar',data:{labels:arr.map(x=>x.d),datasets:[{data:arr.map(x=>x.v),
-    backgroundColor:arr.map(x=>DIST_COLOR[x.d]||'#888'),borderRadius:6,maxBarThickness:30}]},
-    options:baseOpt({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>nf(c.raw)}}}})});}
+  mk('cRank',{type:'bar',data:{labels:arr.map(x=>DSHORT(x.d)),datasets:[{data:arr.map(x=>x.v),
+    backgroundColor:arr.map(x=>DIST_COLOR[x.d]||'#888'),borderRadius:6,maxBarThickness:28}]},
+    options:baseOpt({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>nf(c.raw)}}},
+      scales:{x:{beginAtZero:true,ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{color:cssv('--line')}},y:catY()}})});}
 function toggleFull(){const el=document.documentElement;
   if(!document.fullscreenElement){(el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el);}
   else{(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);}}
@@ -951,7 +955,7 @@ function drawDistrictCompare(){
       plugins:{legend:{display:true,labels:{font:{family:'Sarabun',size:11},color:cssv('--ink2'),boxWidth:12,padding:10}},
         tooltip:{callbacks:{label:c=>c.dataset.label+': '+nf(c.raw)+' '+meta.u}}},
       scales:{x:{beginAtZero:true,ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{color:cssv('--line')}},
-        y:{ticks:{font:{family:'Sarabun',size:11},color:cssv('--ink2')},grid:{display:false}}}})});
+        y:catY()}})});
 }
 
 /* ===================== AI สรุป ===================== */
@@ -1026,6 +1030,10 @@ function baseOpt(extra){return Object.assign({responsive:true,maintainAspectRati
   plugins:{legend:{labels:{font:{family:'Sarabun',size:12},color:cssv('--ink2'),boxWidth:13,padding:14}}},
   scales:{x:{ticks:{font:{family:'Sarabun',size:11},color:cssv('--muted')},grid:{display:false}},
           y:{ticks:{font:{family:'Sarabun',size:11},color:cssv('--muted')},grid:{color:cssv('--line')},beginAtZero:true}}},extra||{});}
+/* แกนหมวดหมู่แนวตั้ง (ชื่ออำเภอ) — กันความกว้างไว้ไม่ให้ตัวอักษรถูกตัดบนมือถือ */
+function catY(){var mob=(typeof window!=='undefined'&&window.innerWidth<600);
+  return {afterFit:function(sc){sc.width=mob?86:114;},
+    ticks:{autoSkip:false,font:{family:'Sarabun',size:mob?10:11},color:cssv('--ink2')},grid:{display:false}};}
 function mk(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),cfg);}
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
 function toggleTheme(){const d=document.body.getAttribute('data-theme')==='dark';
