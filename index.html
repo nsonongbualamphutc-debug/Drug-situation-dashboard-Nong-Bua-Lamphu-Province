@@ -9,6 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ยาเสพติด นภ.">
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>ศูนย์ข้อมูลสถานการณ์ยาเสพติด จังหวัดหนองบัวลำภู</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,7 +38,7 @@
     --shadow:0 1px 2px rgba(0,0,0,.35),0 14px 34px rgba(0,0,0,.4);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);font-family:'Sarabun',sans-serif;color:var(--ink);transition:.3s background,.3s color}
+  body{margin:0;background:linear-gradient(180deg,var(--soft),var(--bg)) fixed;font-family:'Sarabun',sans-serif;color:var(--ink);transition:.3s background,.3s color}
   .wrap{max-width:1360px;margin:0 auto;padding:0 18px 72px}
   .ic{width:1em;height:1em;flex:none;vertical-align:-.14em}
   /* ===== HERO ===== */
@@ -46,7 +47,8 @@
         radial-gradient(90% 120% at 0% 120%,rgba(192,57,43,.20),transparent 50%),
         linear-gradient(135deg,var(--navy),var(--navy2));
         color:#eef3ff;border-radius:0 0 26px 26px;padding:22px 26px 24px;margin-bottom:18px;
-        box-shadow:0 18px 40px rgba(15,29,61,.28);position:relative;overflow:hidden}
+        box-shadow:0 18px 40px rgba(15,29,61,.28),inset 0 -3px 0 var(--gold);position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-40px;top:50%;transform:translateY(-50%);width:300px;height:300px;background:url('ตราหนองบัวลำภู.png') center/contain no-repeat;opacity:.07;pointer-events:none}
   .hero::before{content:"";position:absolute;inset:0;background:
         repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 46px);pointer-events:none}
   .hbar{display:flex;align-items:center;gap:15px;flex-wrap:wrap;position:relative}
@@ -121,8 +123,8 @@
   .kpi .k-unit{font-size:.7rem;color:var(--muted);font-weight:400}
   .kpi .k-delta{font-size:.74rem;font-weight:600;display:inline-flex;align-items:center;gap:4px}
   .up{color:var(--enf)} .down{color:var(--tx)} .flat{color:var(--muted)}
-  .i-enf{background:var(--enfbg);color:var(--enf)} .i-tx{background:var(--txbg);color:var(--tx)}
-  .i-watch{background:var(--watchbg);color:var(--watch)} .i-seize{background:var(--seizebg);color:var(--seize)}
+  .i-enf{background:linear-gradient(140deg,var(--enfbg),var(--card));color:var(--enf)} .i-tx{background:linear-gradient(140deg,var(--txbg),var(--card));color:var(--tx)}
+  .i-watch{background:linear-gradient(140deg,var(--watchbg),var(--card));color:var(--watch)} .i-seize{background:linear-gradient(140deg,var(--seizebg),var(--card));color:var(--seize)}
   /* ===== cards ===== */
   .row{display:grid;gap:16px;margin-bottom:18px}
   .row.r2{grid-template-columns:1.25fr 1fr} .row.r2b{grid-template-columns:1fr 1fr}
@@ -217,7 +219,7 @@
   .kpi .ibox{box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
   .ycard{position:relative;overflow:hidden}
   .ycard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--line));opacity:.92}
-  .sechead::before{content:'';width:5px;height:1.05em;border-radius:3px;flex:none;background:linear-gradient(180deg,var(--enf),var(--seize))}
+  .sechead::before{content:'';width:5px;height:1.05em;border-radius:3px;flex:none;background:linear-gradient(180deg,var(--navy2),var(--gold))}
   .card{transition:box-shadow .18s,transform .18s}
   .card:hover{box-shadow:0 2px 6px rgba(16,32,63,.07),0 16px 38px rgba(16,32,63,.1)}
   /* ===== ตารางแบ่งสีตามประเภทข้อมูล ===== */
@@ -235,6 +237,12 @@
   .dtbl .dname{font-weight:600;color:var(--ink)}
   .dtbl tbody tr:hover td{filter:brightness(.97)}
   .dtbl tfoot td{font-weight:700;border-top:2px solid var(--line)}
+  .skel{background:linear-gradient(90deg,var(--soft) 25%,var(--line) 37%,var(--soft) 63%);background-size:400% 100%;animation:sh 1.4s ease infinite;border-radius:12px}
+  @keyframes sh{0%{background-position:100% 0}100%{background-position:0 0}}
+  .skel-row{height:30px;width:min(280px,60%);margin:10px 2px 18px}
+  .skel-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}
+  .skel-card{height:96px} .skel-chart{height:300px}
+  @media(max-width:600px){.skel-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
   /* ===== TABLET ===== */
   @media(min-width:681px) and (max-width:1024px){
     .wrap{max-width:100%}
@@ -303,10 +311,10 @@
     th,td{padding:8px 9px}
   }
   .logos{display:flex;align-items:center;gap:9px}
-  .logo{width:52px;height:52px;border-radius:14px;background:#fff;display:grid;place-items:center;padding:5px;box-shadow:0 6px 18px rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.08);flex:none;overflow:hidden}
+  .logo{width:56px;height:56px;border-radius:50%;background:#fff;display:grid;place-items:center;padding:5px;box-shadow:0 0 0 2px var(--gold),0 7px 18px rgba(0,0,0,.3);flex:none;overflow:hidden}
   .logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
   .logo.ph::after{content:attr(data-fb);font-family:'Kanit',sans-serif;font-weight:700;color:#0f1d3d;font-size:1.05rem}
-  @media(max-width:600px){.logos{gap:7px}.logo{width:42px;height:42px;border-radius:12px;padding:4px}}
+  @media(max-width:600px){.logos{gap:7px}.logo{width:44px;height:44px;padding:4px}}
 </style>
 </head>
 <body>
@@ -343,7 +351,11 @@
     <span class="updtxt" id="updTxt">—</span>
   </div>
 
-  <div id="content"><div class="card loading"><div class="spin"></div>กำลังโหลดข้อมูลจากระบบ…</div></div>
+  <div id="content">
+    <div class="skel skel-row"></div>
+    <div class="skel-kpis"><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div></div>
+    <div class="skel skel-chart"></div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
