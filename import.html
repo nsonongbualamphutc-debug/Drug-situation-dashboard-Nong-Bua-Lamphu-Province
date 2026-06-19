@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1d3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ยาเสพติด นภ.">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>นำเข้าข้อมูล Excel • สถานการณ์ยาเสพติด หนองบัวลำภู</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -79,11 +86,19 @@
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 22px;border-radius:11px;font-size:.86rem;opacity:0;transition:.25s;z-index:50;pointer-events:none;font-weight:600}
   .toast.show{opacity:1}
   @media(max-width:600px){.wrap{padding:16px 12px 56px}.card{padding:16px 15px}.kpi .kv{font-size:1.3rem}.chartbox{height:250px}}
+  .logos{display:flex;align-items:center;gap:9px}
+  .logo{width:52px;height:52px;border-radius:14px;background:#fff;display:grid;place-items:center;padding:5px;box-shadow:0 6px 18px rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.08);flex:none;overflow:hidden}
+  .logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
+  .logo.ph::after{content:attr(data-fb);font-family:'Kanit',sans-serif;font-weight:700;color:#0f1d3d;font-size:1.05rem}
+  @media(max-width:600px){.logos{gap:7px}.logo{width:42px;height:42px;border-radius:12px;padding:4px}}
 </style>
 </head>
 <body>
 <div class="hero"><div class="hbar">
-  <div class="crest">นภ</div>
+  <div class="logos">
+      <span class="logo" data-fb="นภ"><img src="ตราหนองบัวลำภู.png" alt="ตราจังหวัดหนองบัวลำภู" onerror="this.parentNode.classList.add('ph');this.remove();"></span>
+      <span class="logo" data-fb="ปค"><img src="ปกครอง.png" alt="ที่ทำการปกครองจังหวัดหนองบัวลำภู" onerror="this.parentNode.classList.add('ph');this.remove();"></span>
+    </div>
   <div class="htxt"><h1>นำเข้าข้อมูลจาก Excel</h1><p>อัปโหลดไฟล์แม่แบบ แล้วระบบจะแสดงผลเป็นแดชบอร์ดทันที</p></div>
   <div class="htools">
     <a class="hbtn" href="index.html">📊 แดชบอร์ด</a>
@@ -324,5 +339,6 @@ async function pushWeekly(){
 function setPush(t,c){const s=document.getElementById('pushStatus');s.textContent=t;s.className='status '+(c||'muted');}
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
 </script>
+<script>if("serviceWorker"in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>
 </body>
 </html>

@@ -1,0 +1,22 @@
+/* Service Worker — แดชบอร์ดยาเสพติด นภ. */
+const CACHE = 'nbl-drug-v1';
+const SHELL = ['./','./index.html','./input.html','./import.html','./manifest.json','./icon-192.png','./icon-512.png'];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if (url.origin === location.origin) {
+    // app shell: ใช้แคชก่อน แล้วอัปเดตเบื้องหลัง
+    e.respondWith(
+      caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+        const cc = res.clone(); caches.open(CACHE).then(c => c.put(e.request, cc)); return res;
+      }).catch(() => caches.match('./index.html')))
+    );
+  }
+  // คำขอข้ามโดเมน (Apps Script / CDN / แผนที่) ปล่อยผ่านตามปกติ
+});

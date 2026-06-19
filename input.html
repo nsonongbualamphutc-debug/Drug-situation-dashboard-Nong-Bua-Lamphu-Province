@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1d3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ยาเสพติด นภ.">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>กรอกข้อมูลสถานการณ์ยาเสพติด • หนองบัวลำภู</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -73,12 +80,20 @@
     .status{flex:1 1 100%;text-align:center}
     th,td{padding:8px 8px}
   }
+  .logos{display:flex;align-items:center;gap:9px}
+  .logo{width:52px;height:52px;border-radius:14px;background:#fff;display:grid;place-items:center;padding:5px;box-shadow:0 6px 18px rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.08);flex:none;overflow:hidden}
+  .logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
+  .logo.ph::after{content:attr(data-fb);font-family:'Kanit',sans-serif;font-weight:700;color:#0f1d3d;font-size:1.05rem}
+  @media(max-width:600px){.logos{gap:7px}.logo{width:42px;height:42px;border-radius:12px;padding:4px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="crest">นภ</div>
+    <div class="logos">
+      <span class="logo" data-fb="นภ"><img src="ตราหนองบัวลำภู.png" alt="ตราจังหวัดหนองบัวลำภู" onerror="this.parentNode.classList.add('ph');this.remove();"></span>
+      <span class="logo" data-fb="ปค"><img src="ปกครอง.png" alt="ที่ทำการปกครองจังหวัดหนองบัวลำภู" onerror="this.parentNode.classList.add('ph');this.remove();"></span>
+    </div>
     <div>
       <h1>ระบบกรอกข้อมูลสถานการณ์ยาเสพติด</h1>
       <p>จังหวัดหนองบัวลำภู • รายงานรายสัปดาห์ตามแผนปฏิบัติการ (Action Plan)</p>
@@ -105,7 +120,7 @@
     <div class="grid g3">
       <div><label>จำนวนคดี <span class="hint">(คดี)</span></label><input id="d_cases" type="number" min="0" value="0"></div>
       <div><label>ผู้ต้องหา <span class="hint">(คน)</span></label><input id="d_suspects" type="number" min="0" value="0"></div>
-      <div><label>ผู้ค้ารายสำคัญที่จับกุม <span class="hint">(ราย • เทียบเป้า 511)</span></label><input id="d_dealers" type="number" min="0" value="0"></div>
+      <div><label>จับกุมคดีข้อหาร้ายแรง <span class="hint">(ราย • เทียบเป้า 300)</span></label><input id="d_dealers" type="number" min="0" value="0"></div>
       <div><label>ยาบ้า <span class="hint">(เม็ด)</span></label><input id="d_methPills" type="number" min="0" value="0"></div>
       <div><label>ยาไอซ์ <span class="hint">(กรัม)</span></label><input id="d_iceGrams" type="number" min="0" step="0.01" value="0"></div>
     </div>
@@ -115,7 +130,7 @@
   <div class="card">
     <span class="sectiontag tag-tx"><span class="dot"></span>ด้านการบำบัดฟื้นฟู / สาธารณสุข</span>
     <div class="grid g4">
-      <div><label>นำเข้าสู่การบำบัด <span class="hint">(คน • เทียบเป้า 2,415)</span></label><input id="d_intoTreatment" type="number" min="0" value="0"></div>
+      <div><label>นำเข้าสู่การบำบัด <span class="hint">(คน • เทียบเป้า 1,227)</span></label><input id="d_intoTreatment" type="number" min="0" value="0"></div>
       <div><label>ผ่าน/สำเร็จการบำบัด <span class="hint">(คน)</span></label><input id="d_completedTreatment" type="number" min="0" value="0"></div>
       <div><label>ค้นหา/คัดกรอง (Re-X-ray) <span class="hint">(คน)</span></label><input id="d_xray" type="number" min="0" value="0"></div>
       <div><label>ผู้มีอาการจิตเวช (SMI-V) <span class="hint">(คน)</span></label><input id="d_psychiatric" type="number" min="0" value="0"></div>
@@ -265,5 +280,6 @@ function setStatus(t,c){const s=$('status');s.textContent=t;s.className='status 
 
 initUI();loadAll();
 </script>
+<script>if("serviceWorker"in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>
 </body>
 </html>
