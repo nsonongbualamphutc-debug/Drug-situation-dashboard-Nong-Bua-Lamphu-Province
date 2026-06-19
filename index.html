@@ -1032,8 +1032,12 @@ function baseOpt(extra){return Object.assign({responsive:true,maintainAspectRati
           y:{ticks:{font:{family:'Sarabun',size:11},color:cssv('--muted')},grid:{color:cssv('--line')},beginAtZero:true}}},extra||{});}
 /* แกนหมวดหมู่แนวตั้ง (ชื่ออำเภอ) — กันความกว้างไว้ไม่ให้ตัวอักษรถูกตัดบนมือถือ */
 function catY(){var mob=(typeof window!=='undefined'&&window.innerWidth<600);
-  return {afterFit:function(sc){sc.width=mob?86:114;},
-    ticks:{autoSkip:false,font:{family:'Sarabun',size:mob?10:11},color:cssv('--ink2')},grid:{display:false}};}
+  /* ปลดเพดานความกว้างแกนก่อน fit เพื่อไม่ให้ Chart ตัดชื่ออำเภอ แล้วให้มันปรับขนาดเองตามชื่อจริง */
+  return {maxWidth:mob?150:190,
+    beforeFit:function(sc){sc.maxWidth=mob?150:190;},
+    ticks:{autoSkip:false,padding:6,crossAlign:'far',mirror:false,
+      font:{family:'Sarabun',size:mob?11:12},color:cssv('--ink2')},
+    grid:{display:false}};}
 function mk(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),cfg);}
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
 function toggleTheme(){const d=document.body.getAttribute('data-theme')==='dark';
