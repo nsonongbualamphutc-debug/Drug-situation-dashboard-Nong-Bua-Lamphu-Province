@@ -16,13 +16,9 @@
 
 const SHEET_ID  = '17bdbyXnql6_I0np1yn3sCTXJtGRHYdE0XnoiYEx4NTg';   // <<< ใส่ ID ชีตของคุณ
 const SHEET_NAME = 'WeeklyData';
-const DEFAULT_PIN = '654321';                         // เปลี่ยนได้ใน Script Properties
-const SUPER_PIN = '999999';                               // PIN ผู้ดูแล (กรอกได้ทุกอำเภอ) — เปลี่ยนใน Script Properties: SUPER_PIN
-// PIN ประจำอำเภอ (แต่ละอำเภอกรอกเฉพาะของตน) — แก้ได้ หรือใช้ ENTRY_PIN/SUPER_PIN แทน
-const DISTRICT_PIN = {
-  'เมืองหนองบัวลำภู':'100001','ศรีบุญเรือง':'100002','นากลาง':'100003',
-  'โนนสัง':'100004','สุวรรณคูหา':'100005','นาวัง':'100006'
-};
+// รหัส PIN ไม่เก็บในซอร์สโค้ด — ตั้งค่าใน Apps Script: Project Settings > Script properties
+//   ENTRY_PIN = <PIN เจ้าหน้าที่>  (จำเป็น)
+//   SUPER_PIN = <PIN ผู้ดูแล>      (ถ้าต้องการ)
 
 // ลำดับคอลัมน์ในชีต (ห้ามสลับลำดับ)
 const HEADERS = [
@@ -43,8 +39,7 @@ function setup() {
   sh.clear();
   sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold');
   sh.setFrozenRows(1);
-  PropertiesService.getScriptProperties().setProperty('ENTRY_PIN',
-    PropertiesService.getScriptProperties().getProperty('ENTRY_PIN') || DEFAULT_PIN);
+  // ตั้ง PIN ที่ Project Settings > Script properties (ENTRY_PIN) — ไม่กำหนดในโค้ด
   return 'setup done';
 }
 
@@ -96,7 +91,7 @@ function readOne(year, month, week, district) {
 
 /* ---------- บันทึก (upsert ไม่ทบยอด) ---------- */
 function saveRow(p) {
-  if (!checkPin(p.pin, p.district)) return { ok: false, error: 'PIN ไม่ถูกต้อง หรือไม่มีสิทธิ์ในอำเภอนี้' };
+  if (!checkPin(p.pin)) return { ok: false, error: 'PIN ไม่ถูกต้อง' };
 
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -129,16 +124,14 @@ function saveRow(p) {
   }
 }
 
-/* ---------- ตรวจสิทธิ์ PIN (ผู้ดูแล / รายอำเภอ / ENTRY_PIN เดิม) ---------- */
-function checkPin(pin, district) {
+/* ---------- ตรวจสิทธิ์ PIN (อ่านจาก Script Properties เท่านั้น ไม่มีรหัสในซอร์ส) ---------- */
+function checkPin(pin) {
   pin = String(pin || '');
   const props = PropertiesService.getScriptProperties();
-  const superPin = props.getProperty('SUPER_PIN') || SUPER_PIN;
-  const entryPin = props.getProperty('ENTRY_PIN') || DEFAULT_PIN;
-  if (pin === String(superPin)) return true;       // ผู้ดูแลทำได้ทุกอำเภอ
-  if (pin === String(entryPin)) return true;       // PIN กลางเดิม (ใช้งานต่อได้)
-  const dp = props.getProperty('PIN_' + district) || DISTRICT_PIN[district];  // PIN ประจำอำเภอ
-  if (dp && pin === String(dp)) return true;
+  const entryPin = props.getProperty('ENTRY_PIN');
+  const superPin = props.getProperty('SUPER_PIN');
+  if (entryPin && pin === String(entryPin)) return true;
+  if (superPin && pin === String(superPin)) return true;
   return false;
 }
 

@@ -91,9 +91,21 @@
   .logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
   .logo.ph::after{content:attr(data-fb);font-family:'Kanit',sans-serif;font-weight:700;color:#0f1d3d;font-size:1.05rem}
   @media(max-width:600px){.logos{gap:7px}.logo{width:42px;height:42px;border-radius:12px;padding:4px}}
+  .gate{position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#0f1d3d,#1b2f5e);display:grid;place-items:center;padding:20px}
+  .gatebox{background:#fff;border-radius:20px;padding:34px 30px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .glogo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#1b2f5e,#0f1d3d);display:grid;place-items:center;margin:0 auto 16px;color:#d8a64a;font-size:30px}
+  .gatebox h2{font-family:'Kanit',sans-serif;font-weight:700;font-size:1.2rem;margin:0 0 6px;color:#10203f}
+  .gatebox p{color:#6c7689;font-size:.86rem;margin:0 0 18px}
+  .gatebox input{width:100%;padding:13px;border:1.5px solid #e4e9f2;border-radius:12px;font-family:inherit;font-size:1.3rem;text-align:center;letter-spacing:.4em;color:#10203f}
+  .gatebox input:focus{outline:none;border-color:#1b2f5e;box-shadow:0 0 0 3px rgba(27,47,94,.12)}
+  .gatebox button{width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;background:#1b2f5e;color:#fff;font-family:'Kanit',sans-serif;font-weight:600;font-size:1rem;cursor:pointer}
+  .gatebox button:hover{background:#0f1d3d}
+  .gerr{color:#c0392b;font-size:.85rem;font-weight:600;margin-top:12px;min-height:18px}
 </style>
 </head>
 <body>
+<div id="gate" class="gate"><div class="gatebox"><div class="glogo">🔒</div><h2>เข้าสู่ระบบเจ้าหน้าที่</h2><p>กรอก PIN เพื่อเข้าใช้งานระบบนำเข้า Excel</p><input id="gpin" type="password" inputmode="numeric" placeholder="••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()"><button onclick="tryUnlock()">ปลดล็อก</button><div class="gerr" id="gerr"></div></div></div>
+
 <div class="hero"><div class="hbar">
   <div class="logos">
       <span class="logo" data-fb="นภ"><img src="ตราหนองบัวลำภู.png" alt="ตราจังหวัดหนองบัวลำภู" onerror="this.parentNode.classList.add('ph');this.remove();"></span>
@@ -300,7 +312,6 @@ function weeklyBlock(w){
       <thead><tr><th>ช่วงเวลา</th><th>อำเภอ</th><th>คดี</th><th>ผู้ค้า</th><th>ยาบ้า</th><th>บำบัด</th><th>หมายเหตุ</th></tr></thead>
       <tbody>${body}</tbody></table></div>
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <input type="password" id="pin" placeholder="PIN เจ้าหน้าที่" autocomplete="off">
       <button class="btn btn-primary" id="pushBtn" onclick="pushWeekly()">${ic('send')} ส่งเข้าระบบ Real-time</button>
       <span class="status muted" id="pushStatus">พร้อมส่ง ${w.length} รายการ</span>
     </div>
@@ -320,8 +331,8 @@ function jsonp(params){return new Promise((res,rej)=>{
   setTimeout(()=>{if(!done){rej(new Error('timeout'));clean();}},20000);
 });}
 async function pushWeekly(){
-  const pin=document.getElementById('pin').value.trim();
-  if(!pin){setPush('กรุณากรอก PIN','err');return;}
+  const pin=window.__PIN;
+  if(!pin){setPush('กรุณาเข้าสู่ระบบก่อน','err');return;}
   const btn=document.getElementById('pushBtn');btn.disabled=true;
   document.getElementById('progWrap').classList.remove('hidden');
   let ok=0,fail=0;
@@ -338,6 +349,20 @@ async function pushWeekly(){
 }
 function setPush(t,c){const s=document.getElementById('pushStatus');s.textContent=t;s.className='status '+(c||'muted');}
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
+function startApp(){}
+
+/* ===== ล็อกด้วย PIN (เก็บเฉพาะค่า hash ไม่ใช่รหัสจริง) ===== */
+const PIN_HASH='cac8c4ea35cdae36492bbb8d8e0b1442f28c0b1d47c42350d6b20b5f5e467e06';
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function tryUnlock(){const el=document.getElementById('gpin');const v=(el.value||'').trim();
+  if(v&&await sha(v)===PIN_HASH){try{sessionStorage.setItem('nbl_pin',v);}catch(e){}openApp(v);}
+  else{document.getElementById('gerr').textContent='PIN ไม่ถูกต้อง';el.value='';el.focus();}}
+function openApp(pin){window.__PIN=pin;const g=document.getElementById('gate');if(g)g.style.display='none';
+  if(!window.__started){window.__started=1;startApp();}}
+async function gateInit(){try{const sv=sessionStorage.getItem('nbl_pin');if(sv&&await sha(sv)===PIN_HASH){openApp(sv);return;}}catch(e){}
+  const el=document.getElementById('gpin');if(el)el.focus();}
+
+gateInit();
 </script>
 <script>if("serviceWorker"in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>
 </body>
