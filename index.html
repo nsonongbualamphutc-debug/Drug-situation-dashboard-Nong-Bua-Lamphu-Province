@@ -243,6 +243,8 @@
   .skel-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}
   .skel-card{height:96px} .skel-chart{height:300px}
   @media(max-width:600px){.skel-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .chartbox.tall2{height:440px}
+  @media(max-width:600px){.chartbox.tall2{height:380px}}
   /* ===== TABLET ===== */
   @media(min-width:681px) and (max-width:1024px){
     .wrap{max-width:100%}
@@ -521,6 +523,7 @@ function render(){
     <div class="sechead">${ic('chart')} ตัวชี้วัดภาพรวม — ${curLabel}${s.district!=='all'?' • '+s.district:''}</div>
     ${kpiCards(curSum,prevSum)}
     ${yearCompareSection()}
+    ${districtCompareSection()}
     ${submissionCard(s)}
     <div class="row r2">${goalCard(s,yearRows)}${trendCard(s)}</div>
     <div class="row r2b">${districtChartCard(s)}${mapCard()}</div>
@@ -530,7 +533,7 @@ function render(){
     ${tableCard(s)}
     ${rawCard()}
   `;
-  drawTrend(s);drawDistrict(s);drawType(curSum);drawYearMetrics();drawMap(s);drawRank(s);animateCounts();
+  drawTrend(s);drawDistrict(s);drawType(curSum);drawYearMetrics();drawMap(s);drawRank(s);drawDistrictCompare();animateCounts();
 }
 
 function renderRibbon(c,label){
@@ -923,6 +926,33 @@ function tween(node,from,to,dec,dur){const t0=performance.now();
   function step(t){const p=Math.min((t-t0)/dur,1),e=1-Math.pow(1-p,3);node.textContent=fmt(from+(to-from)*e);
     if(p<1)requestAnimationFrame(step);else node.textContent=fmt(to);}
   requestAnimationFrame(step);}
+
+/* ---------- เปรียบเทียบรายอำเภอ (รายปี) ---------- */
+const DC_METRICS=[{k:'cases',kk:'c',l:'คดี',u:'คดี',c:'--enf'},{k:'suspects',kk:'s',l:'ผู้ต้องหา',u:'คน',c:'--watch'},{k:'meth',kk:'m',l:'ยาบ้า',u:'เม็ด',c:'--seize'},{k:'ice',kk:'i',l:'ไอซ์',u:'กรัม',c:'--tx'}];
+const DSHORT=d=>d==='เมืองหนองบัวลำภู'?'เมือง':d;
+function districtCompareSection(){
+  const m=window.__dcMetric||'cases';
+  const b=x=>`<button class="rkbtn ${m===x.k?'on':''}" data-dm="${x.k}" onclick="setDC('${x.k}')">${x.l}</button>`;
+  return`<div class="sechead">${ic('building')} เปรียบเทียบรายอำเภอ (ปีงบประมาณ 2567–2569)</div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="rkhead"><h3><span style="color:var(--seize)">${ic('chart')}</span> รายอำเภอ × ปี</h3>
+        <div class="rkbtns">${DC_METRICS.map(b).join('')}</div></div>
+      <p class="csub">เทียบ 3 ปีงบประมาณของแต่ละอำเภอ — แท่งสีเข้มสุดคือปีล่าสุด (2569)</p>
+      <div class="chartbox tall2"><canvas id="cDistCmp"></canvas></div></div>`;
+}
+function setDC(k){window.__dcMetric=k;document.querySelectorAll('[data-dm]').forEach(b=>b.classList.toggle('on',b.dataset.dm===k));drawDistrictCompare();}
+function drawDistrictCompare(){
+  if(!document.getElementById('cDistCmp'))return;
+  const m=window.__dcMetric||'cases',meta=DC_METRICS.find(x=>x.k===m),base=cssv(meta.c);
+  const yrs=[['y67','2567',base+'55'],['y68','2568',base+'99'],['y69','2569',base]];
+  mk('cDistCmp',{type:'bar',data:{labels:DISTRICTS.map(DSHORT),
+    datasets:yrs.map(([yk,yl,col])=>({label:yl,data:DISTRICTS.map(d=>PLAN_ARREST[d][yk][meta.kk]),backgroundColor:col,borderRadius:4,maxBarThickness:16}))},
+    options:baseOpt({indexAxis:'y',
+      plugins:{legend:{display:true,labels:{font:{family:'Sarabun',size:11},color:cssv('--ink2'),boxWidth:12,padding:10}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+nf(c.raw)+' '+meta.u}}},
+      scales:{x:{beginAtZero:true,ticks:{font:{family:'Sarabun',size:10},color:cssv('--muted')},grid:{color:cssv('--line')}},
+        y:{ticks:{font:{family:'Sarabun',size:11},color:cssv('--ink2')},grid:{display:false}}}})});
+}
 
 /* ===================== AI สรุป ===================== */
 function aiSummary(s,c,p,curLabel,prevLabel,ySum,curRows){
