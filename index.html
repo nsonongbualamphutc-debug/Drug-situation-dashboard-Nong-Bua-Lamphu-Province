@@ -706,13 +706,13 @@ function kpiCards(c,p){return`<div class="kpis">
 /* ---------- เป้าหมาย ---------- */
 function goalCard(s,yearRows){
   const byD=d=>aggLatest(yearRows.filter(r=>r.district===d));
-  const dealTot=aggLatest(yearRows).dealers,treatTot=aggLatest(yearRows).intoTreatment;
+  const dealTot=aggLatest(yearRows).dealers,treatTot=aggLatest(yearRows).completedTreatment;
   const tgtDeal=s.district==='all'?TARGET_SUM.dealers:(TARGET.dealers[s.district]||0);
   const tgtTreat=s.district==='all'?TARGET_SUM.treat:(TARGET.treat[s.district]||0);
   const pD=tgtDeal?Math.min(dealTot/tgtDeal*100,100):0,pT=tgtTreat?Math.min(treatTot/tgtTreat*100,100):0;
   const pDr=tgtDeal?dealTot/tgtDeal*100:0,pTr=tgtTreat?treatTot/tgtTreat*100:0;
   const mini=(type,map)=>s.district!=='all'?'':DISTRICTS.map(d=>{
-    const v=byD(d)[type==='deal'?'dealers':'intoTreatment'],t=map[d]||0,p=t?Math.min(v/t*100,100):0;
+    const v=byD(d)[type==='deal'?'dealers':'completedTreatment'],t=map[d]||0,p=t?Math.min(v/t*100,100):0;
     return`<div class="mini"><span class="mname">${d}</span>
       <span class="mtrack"><span class="mfill" style="width:${p}%;background:${type==='deal'?'var(--enf)':'var(--tx)'}"></span></span>
       <span style="color:var(--muted)">${nf(v)}/${nf(t)}</span></div>`;}).join('');
@@ -726,7 +726,7 @@ function goalCard(s,yearRows){
         <div class="track" style="flex:1"><div class="fill enf" style="width:${pD}%"></div></div>
         <span class="gpct" style="color:var(--enf)">${pDr.toFixed(0)}%</span></div>${mini('deal',TARGET.dealers)}</div>
     <div class="goal">
-      <div class="glabel"><span class="gname" style="color:var(--tx)">${ic('treat')} นำผู้เสพ/ผู้ติดเข้าบำบัด</span>
+      <div class="glabel"><span class="gname" style="color:var(--tx)">${ic('treat')} การบำบัดฟื้นฟู (ผ่านการบำบัด)</span>
         <span class="gnum"><b>${nf(treatTot)}</b> / ${nf(tgtTreat)} คน</span></div>
       <div style="display:flex;gap:10px;align-items:center">
         <div class="track" style="flex:1"><div class="fill tx" style="width:${pT}%"></div></div>
@@ -848,7 +848,7 @@ function gaugeOne(name,val,tgt,unit){
   const C={x:100,y:104},R=76;
   const pt=(deg,r)=>{const a=deg*Math.PI/180;return [C.x+ (r||R)*Math.cos(a), C.y-(r||R)*Math.sin(a)];};
   const ang=v=>180-Math.max(0,Math.min(1,v/max))*180;
-  const arc=(v1,v2)=>{const [x1,y1]=pt(ang(v1)),[x2,y2]=pt(ang(v2));const large=(ang(v1)-ang(v2))>180?1:0;return `M${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 ${large} 0 ${x2.toFixed(1)} ${y2.toFixed(1)}`;};
+  const arc=(v1,v2)=>{const [x1,y1]=pt(ang(v1)),[x2,y2]=pt(ang(v2));const large=(ang(v1)-ang(v2))>180?1:0;return `M${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 ${large} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;};
   const pct=tgt?val/tgt*100:0;
   const col=!tgt?'var(--muted)':pct>=90?'var(--tx)':pct>=60?'var(--watch)':'var(--enf)';
   const [nx,ny]=pt(ang(Math.min(val,max)),R-4);
@@ -872,7 +872,7 @@ function gaugeOne(name,val,tgt,unit){
 function gaugeGrid(s){
   s=s||window.__curS||{year:2569,month:0,week:0,district:'all'};
   const m=window.__gaugeMetric||'dealers';
-  const cfg=m==='dealers'?{tgt:TARGET.dealers,field:'dealers',unit:'ราย'}:{tgt:TARGET.treat,field:'intoTreatment',unit:'คน'};
+  const cfg=m==='dealers'?{tgt:TARGET.dealers,field:'dealers',unit:'ราย'}:{tgt:TARGET.treat,field:'completedTreatment',unit:'คน'};
   return DISTRICTS.map(d=>{const g=aggLatest(filt(s.year,s.month,d,s.week));return gaugeOne(d,g[cfg.field]||0,cfg.tgt[d]||0,cfg.unit);}).join('');
 }
 function setGauge(k){window.__gaugeMetric=k;document.querySelectorAll('[data-gm]').forEach(b=>b.classList.toggle('on',b.dataset.gm===k));const el=document.getElementById('gaugeGrid');if(el)el.innerHTML=gaugeGrid(window.__curS);}
