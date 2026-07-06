@@ -96,6 +96,8 @@
   .gatebox button{width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;background:#1b2f5e;color:#fff;font-family:'Kanit',sans-serif;font-weight:600;font-size:1rem;cursor:pointer}
   .gatebox button:hover{background:#0f1d3d}
   .gerr{color:#c0392b;font-size:.85rem;font-weight:600;margin-top:12px;min-height:18px}
+  .roletag{margin-top:9px;display:inline-block;font-family:'Kanit',sans-serif;font-weight:600;font-size:.82rem;padding:5px 15px;border-radius:20px;background:#eaf1fb;color:#1b2f5e;border:1px solid #c9d9f0}
+  .roletag.admin{background:#eafaf1;color:#0e7a4f;border-color:#bfe6d2}
 </style>
 </head>
 <body>
@@ -110,6 +112,7 @@
     <div>
       <h1>ระบบกรอกข้อมูลสถานการณ์ยาเสพติด</h1>
       <p>จังหวัดหนองบัวลำภู • รายงานรายสัปดาห์ตามแผนปฏิบัติการ (Action Plan)</p>
+      <div id="roleTag" class="roletag" style="display:none"></div>
     </div>
     <a class="link" href="index.html">📊 ดูแดชบอร์ด</a>
     <a class="link" href="import.html">⬆ นำเข้า Excel</a>
@@ -232,9 +235,11 @@ async function loadAll(){
   }catch(e){setStatus('⚠ '+e.message+' (ตรวจสอบ URL API)','err');}
 }
 function renderTable(){
-  $('countPill').textContent=ALLROWS.length+' รายการ';
-  if(!ALLROWS.length){$('tbody').innerHTML='<tr><td colspan="10" class="empty">— ยังไม่มีข้อมูล —</td></tr>';return;}
-  const sorted=[...ALLROWS].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  const role=window.__ROLE;
+  const rows=(role&&role!=='ALL')?ALLROWS.filter(r=>r.district===role):ALLROWS;
+  $('countPill').textContent=rows.length+' รายการ';
+  if(!rows.length){$('tbody').innerHTML='<tr><td colspan="10" class="empty">— ยังไม่มีข้อมูล —</td></tr>';return;}
+  const sorted=[...rows].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
   $('tbody').innerHTML=sorted.map(r=>`
     <tr onclick='pick(${JSON.stringify(JSON.stringify(r))})'>
       <td>${shortMonth(r.month)} ${r.year} • ส.${r.week}</td>
@@ -292,15 +297,39 @@ function setStatus(t,c){const s=$('status');s.textContent=t;s.className='status 
 
 function startApp(){initUI();loadAll();}
 
-/* ===== ล็อกด้วย PIN (เก็บเฉพาะค่า hash ไม่ใช่รหัสจริง) ===== */
-const PIN_HASH='cac8c4ea35cdae36492bbb8d8e0b1442f28c0b1d47c42350d6b20b5f5e467e06';
+/* ===== ล็อกด้วย PIN รายอำเภอ (เก็บเฉพาะ hash — ไม่มีรหัสจริงในไฟล์) ===== */
+const ADMIN_HASH='cac8c4ea35cdae36492bbb8d8e0b1442f28c0b1d47c42350d6b20b5f5e467e06'; /* ผู้ดูแล — ทุกอำเภอ */
+const DPIN_HASH={
+  '56e360ea53c66417c39f2a5d2b8827b7917436775ebfdbb4b9d19497e959460c':'เมืองหนองบัวลำภู',
+  '37d1b209a8265ee2dd5badeb8a44d0c12c06663bb5a4133eef1c92c2159e67a8':'ศรีบุญเรือง',
+  '51c6e9fa41a4e889711d66ba37c0a8905e85ee51d3cf092ab6a2699fe2df7f44':'นากลาง',
+  '045167aa5ab8b553c858812f8a478e8b28d66ee2a09c0270a7fbe4cdf0046329':'โนนสัง',
+  '0b40a68666cef28cf90a225b5d3c57a922b1b6813ca405fe9c48637050878c12':'สุวรรณคูหา',
+  '71c6cfa8eeefd61c6ac8307df7ed30b6cfb1a3d8281059641862561fc9e23a5f':'นาวัง'
+};
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+function roleOf(h){return h===ADMIN_HASH?'ALL':(DPIN_HASH[h]||null);}
 async function tryUnlock(){const el=document.getElementById('gpin');const v=(el.value||'').trim();
-  if(v&&await sha(v)===PIN_HASH){try{sessionStorage.setItem('nbl_pin',v);}catch(e){}openApp(v);}
+  const role=v?roleOf(await sha(v)):null;
+  if(role){try{sessionStorage.setItem('nbl_pin',v);}catch(e){}openApp(v,role);}
   else{document.getElementById('gerr').textContent='PIN ไม่ถูกต้อง';el.value='';el.focus();}}
-function openApp(pin){window.__PIN=pin;const g=document.getElementById('gate');if(g)g.style.display='none';
-  if(!window.__started){window.__started=1;startApp();}}
-async function gateInit(){try{const sv=sessionStorage.getItem('nbl_pin');if(sv&&await sha(sv)===PIN_HASH){openApp(sv);return;}}catch(e){}
+function openApp(pin,role){window.__PIN=pin;window.__ROLE=role;const g=document.getElementById('gate');if(g)g.style.display='none';
+  if(!window.__started){window.__started=1;startApp();}
+  applyRole();}
+function applyRole(){
+  const role=window.__ROLE, tag=document.getElementById('roleTag');
+  if(role&&role!=='ALL'){
+    f_district.innerHTML='<option value="'+role+'">'+role+'</option>';
+    f_district.value=role; f_district.disabled=true;
+  }else if(f_district){f_district.disabled=false;}
+  if(tag){
+    if(role==='ALL'){tag.textContent='👑 ผู้ดูแลระบบ • จัดการได้ทุกอำเภอ';tag.className='roletag admin';}
+    else{tag.textContent='📍 เจ้าหน้าที่ '+(role==='เมืองหนองบัวลำภู'?'อ.เมืองหนองบัวลำภู':'อ.'+role)+' • แก้ได้เฉพาะอำเภอนี้';tag.className='roletag';}
+    tag.style.display='inline-block';
+  }
+  renderTable(); loadOne();
+}
+async function gateInit(){try{const sv=sessionStorage.getItem('nbl_pin');if(sv){const r=roleOf(await sha(sv));if(r){openApp(sv,r);return;}}}catch(e){}
   const el=document.getElementById('gpin');if(el)el.focus();}
 
 gateInit();
