@@ -26,13 +26,16 @@
   body{margin:0;background:var(--bg);font-family:'Sarabun',sans-serif;color:var(--ink);
        background-image:radial-gradient(circle at 100% 0,#e3e9f5 0,transparent 40%);min-height:100vh}
   .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
-  header.top{display:flex;align-items:center;gap:14px;margin:6px 0 22px}
+  header.top{display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;margin:6px 0 22px}
   .crest{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--enf));
           display:grid;place-items:center;color:#fff;font-family:'Kanit';font-weight:700;font-size:20px;box-shadow:var(--shadow)}
   header.top h1{font-family:'Kanit';font-weight:600;font-size:1.25rem;margin:0;line-height:1.25}
   header.top p{margin:2px 0 0;color:var(--muted);font-size:.85rem}
   .link{margin-left:auto;font-size:.85rem;color:var(--primary);text-decoration:none;font-weight:600;
         border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:10px}
+  .logout{font-size:.85rem;color:#c0392b;font-weight:600;cursor:pointer;font-family:'Kanit',sans-serif;
+        border:1px solid #f0c9c4;background:#fdf1ef;padding:8px 14px;border-radius:10px}
+  .logout:hover{background:#f6d9d3}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-bottom:18px}
   .card h2{font-family:'Kanit';font-weight:600;font-size:1.02rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
   .card .sub{color:var(--muted);font-size:.82rem;margin:0 0 16px}
@@ -73,7 +76,7 @@
     header.top{gap:11px}
     header.top h1{font-size:1.05rem}
     header.top .crest{width:42px;height:42px;font-size:17px}
-    .link{padding:7px 11px;font-size:.8rem}
+    .link,.logout{padding:7px 11px;font-size:.8rem}
     .card{padding:18px 16px}
     .card h2{font-size:.98rem}
     .btn{flex:1 1 100%;text-align:center;justify-content:center}
@@ -116,6 +119,7 @@
     </div>
     <a class="link" href="index.html">📊 ดูแดชบอร์ด</a>
     <a class="link" href="import.html">⬆ นำเข้า Excel</a>
+    <button class="logout" onclick="logout()">🚪 ออกจากระบบ</button>
   </header>
 
   <!-- ตัวเลือกช่วงเวลา -->
@@ -329,6 +333,7 @@ function applyRole(){
   }
   renderTable(); loadOne();
 }
+function logout(){try{sessionStorage.removeItem('nbl_pin');}catch(e){}window.__PIN=null;window.__ROLE=null;location.reload();}
 async function gateInit(){try{const sv=sessionStorage.getItem('nbl_pin');if(sv){const r=roleOf(await sha(sv));if(r){openApp(sv,r);return;}}}catch(e){}
   const el=document.getElementById('gpin');if(el)el.focus();}
 
