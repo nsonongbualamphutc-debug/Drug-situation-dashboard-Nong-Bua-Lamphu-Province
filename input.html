@@ -89,22 +89,54 @@
   .logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
   .logo.ph::after{content:attr(data-fb);font-family:'Kanit',sans-serif;font-weight:700;color:#0f1d3d;font-size:1.05rem}
   @media(max-width:600px){.logos{gap:7px}.logo{width:44px;height:44px;padding:4px}}
-  .gate{position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#0f1d3d,#1b2f5e);display:grid;place-items:center;padding:20px}
-  .gatebox{background:#fff;border-radius:20px;padding:34px 30px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35)}
-  .glogo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#1b2f5e,#0f1d3d);display:grid;place-items:center;margin:0 auto 16px;color:#d8a64a;font-size:30px}
-  .gatebox h2{font-family:'Kanit',sans-serif;font-weight:700;font-size:1.2rem;margin:0 0 6px;color:#10203f}
-  .gatebox p{color:#6c7689;font-size:.86rem;margin:0 0 18px}
-  .gatebox input{width:100%;padding:13px;border:1.5px solid #e4e9f2;border-radius:12px;font-family:inherit;font-size:1.3rem;text-align:center;letter-spacing:.4em;color:#10203f}
-  .gatebox input:focus{outline:none;border-color:#1b2f5e;box-shadow:0 0 0 3px rgba(27,47,94,.12)}
-  .gatebox button{width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;background:#1b2f5e;color:#fff;font-family:'Kanit',sans-serif;font-weight:600;font-size:1rem;cursor:pointer}
-  .gatebox button:hover{background:#0f1d3d}
+  .gate{position:fixed;inset:0;z-index:1000;background:radial-gradient(1200px 600px at 50% -10%,#24406f 0%,#152a55 42%,#0b1730 100%);display:grid;place-items:center;padding:20px;overflow:hidden}
+  .gate::before,.gate::after{content:"";position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+  .gate::before{width:420px;height:420px;background:rgba(216,166,74,.16);top:-130px;right:-90px}
+  .gate::after{width:380px;height:380px;background:rgba(63,124,214,.20);bottom:-140px;left:-100px}
+  .gatebox{position:relative;z-index:2;background:rgba(255,255,255,.97);border:1px solid rgba(255,255,255,.6);border-radius:24px;padding:34px 30px 28px;width:100%;max-width:378px;text-align:center;
+        box-shadow:0 30px 70px rgba(0,0,0,.42),0 0 0 1px rgba(216,166,74,.18);animation:gateIn .55s cubic-bezier(.2,.8,.25,1) both}
+  @keyframes gateIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+  .gatebox::before{content:"";position:absolute;top:0;left:22px;right:22px;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,transparent,#d8a64a,transparent)}
+  .glogo{width:82px;height:82px;border-radius:50%;background:linear-gradient(145deg,#1b2f5e,#0d1c3c);display:grid;place-items:center;margin:0 auto 15px;
+        box-shadow:0 10px 26px rgba(11,23,48,.34),0 0 0 3px rgba(216,166,74,.75),0 0 0 7px rgba(216,166,74,.16);overflow:hidden}
+  .glogo img{width:74%;height:74%;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+  .glogo.ph::after{content:"🔒";font-size:30px;color:#d8a64a}
+  .gname{font-family:'Kanit',sans-serif;font-weight:600;font-size:.78rem;letter-spacing:.06em;color:#8a94a6;margin:0 0 3px;text-transform:none}
+  .gatebox h2{font-family:'Kanit',sans-serif;font-weight:700;font-size:1.26rem;margin:0 0 5px;color:#0f1d3d;letter-spacing:-.2px}
+  .gatebox p.gsub{color:#6c7689;font-size:.85rem;margin:0 0 20px;line-height:1.5}
+  .ginput{position:relative}
+  .gatebox input{width:100%;padding:15px 46px 15px 16px;border:1.5px solid #e2e8f2;border-radius:14px;font-family:'Kanit',sans-serif;font-size:1.42rem;font-weight:600;text-align:center;letter-spacing:.42em;color:#10203f;background:#f9fbfe;transition:border-color .2s,box-shadow .2s,background .2s}
+  .gatebox input::placeholder{letter-spacing:.3em;color:#c3cbd8;font-weight:400}
+  .gatebox input:focus{outline:none;border-color:#d8a64a;background:#fff;box-shadow:0 0 0 4px rgba(216,166,74,.16)}
+  .geye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:none;background:none;cursor:pointer;font-size:1rem;color:#9aa4b4;padding:0;margin:0;border-radius:9px;line-height:1}
+  .geye:hover{background:#eef2f8;color:#1b2f5e}
+  .gatebox button.gbtn{width:100%;margin-top:14px;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#24406f,#0f1d3d);color:#fff;font-family:'Kanit',sans-serif;font-weight:600;font-size:1.02rem;cursor:pointer;
+        box-shadow:0 10px 24px rgba(15,29,61,.32);transition:transform .18s,box-shadow .18s,filter .18s;position:relative;overflow:hidden}
+  .gatebox button.gbtn:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(15,29,61,.4);filter:brightness(1.12)}
+  .gatebox button.gbtn:active{transform:translateY(0)}
   .gerr{color:#c0392b;font-size:.85rem;font-weight:600;margin-top:12px;min-height:18px}
+  .gback{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:9px 16px;border-radius:11px;font-family:'Kanit',sans-serif;font-weight:600;font-size:.84rem;color:#41527a;text-decoration:none;border:1px solid #e2e8f2;background:#f7f9fc;transition:.18s}
+  .gback:hover{background:#eef2f8;color:#0f1d3d;border-color:#cfd8e6}
+  .gfoot{margin-top:16px;padding-top:15px;border-top:1px solid #eef1f6;color:#9aa4b4;font-size:.74rem;line-height:1.6}
   .roletag{margin-top:9px;display:inline-block;font-family:'Kanit',sans-serif;font-weight:600;font-size:.82rem;padding:5px 15px;border-radius:20px;background:#eaf1fb;color:#1b2f5e;border:1px solid #c9d9f0}
   .roletag.admin{background:#eafaf1;color:#0e7a4f;border-color:#bfe6d2}
 </style>
 </head>
 <body>
-<div id="gate" class="gate"><div class="gatebox"><div class="glogo">🔒</div><h2>เข้าสู่ระบบเจ้าหน้าที่</h2><p>กรอก PIN เพื่อเข้าใช้งานระบบกรอกข้อมูล</p><input id="gpin" type="password" inputmode="numeric" placeholder="••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()"><button onclick="tryUnlock()">ปลดล็อก</button><div class="gerr" id="gerr"></div></div></div>
+<div id="gate" class="gate"><div class="gatebox">
+  <div class="glogo"><img src="ตราหนองบัวลำภู.png" alt="ตราจังหวัดหนองบัวลำภู" onerror="if(this.dataset.f){this.parentNode.classList.add('ph');this.remove();}else{this.dataset.f=1;this.src='favicon.png';}"></div>
+  <p class="gname">จังหวัดหนองบัวลำภู</p>
+  <h2>ระบบกรอกข้อมูลยาเสพติด</h2>
+  <p class="gsub">กรอก PIN ประจำอำเภอของท่านเพื่อเข้าใช้งาน</p>
+  <div class="ginput">
+    <input id="gpin" type="password" inputmode="numeric" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button type="button" class="geye" id="geye" onclick="togglePin()" title="แสดง/ซ่อนรหัส">👁</button>
+  </div>
+  <button class="gbtn" onclick="tryUnlock()">ปลดล็อก</button>
+  <div class="gerr" id="gerr"></div>
+  <a class="gback" href="index.html">← กลับไปยังแดชบอร์ด</a>
+  <div class="gfoot">สำนักงานสถิติจังหวัดหนองบัวลำภู · ที่ทำการปกครองจังหวัด<br>ข้อมูลได้รับการคุ้มครองตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล</div>
+</div></div>
 
 <div class="wrap">
   <header class="top">
@@ -333,6 +365,7 @@ function applyRole(){
   }
   renderTable(); loadOne();
 }
+function togglePin(){const i=document.getElementById('gpin'),b=document.getElementById('geye');const on=i.type==='password';i.type=on?'text':'password';b.textContent=on?'🙈':'👁';i.focus();}
 function logout(){try{sessionStorage.removeItem('nbl_pin');}catch(e){}window.__PIN=null;window.__ROLE=null;location.reload();}
 async function gateInit(){try{const sv=sessionStorage.getItem('nbl_pin');if(sv){const r=roleOf(await sha(sv));if(r){openApp(sv,r);return;}}}catch(e){}
   const el=document.getElementById('gpin');if(el)el.focus();}
