@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>กรอกข้อมูลสถานการณ์ยาเสพติด • หนองบัวลำภู</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -120,6 +121,12 @@
   .gfoot{margin-top:16px;padding-top:15px;border-top:1px solid #eef1f6;color:#9aa4b4;font-size:.74rem;line-height:1.6}
   .roletag{margin-top:9px;display:inline-block;font-family:'Kanit',sans-serif;font-weight:600;font-size:.82rem;padding:5px 15px;border-radius:20px;background:#eaf1fb;color:#1b2f5e;border:1px solid #c9d9f0}
   .roletag.admin{background:#eafaf1;color:#0e7a4f;border-color:#bfe6d2}
+  .roletag.agency{background:#fdf6e9;color:#8a5a10;border-color:#eed9ac}
+  .xbtn{margin-left:auto;font-family:'Kanit',sans-serif;font-weight:600;font-size:.78rem;color:#0e7a4f;background:#eafaf1;border:1px solid #bfe6d2;border-radius:9px;padding:6px 12px;cursor:pointer}
+  .xbtn:hover{background:#d9f3e6}
+  .sumchips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+  .sumchips .sc{background:#f5f8fc;border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:.76rem;color:var(--muted)}
+  .sumchips .sc b{font-family:'Kanit',sans-serif;color:var(--ink);font-size:.92rem;margin-left:5px}
 </style>
 </head>
 <body>
@@ -209,14 +216,13 @@
 
   <!-- ตารางข้อมูลล่าสุด -->
   <div class="card">
-    <h2>③ ข้อมูลที่กรอกล่าสุด <span class="pill" id="countPill">0 รายการ</span></h2>
+    <h2>③ ประวัติการกรอก / ยอดสะสม <span class="pill" id="countPill">0 รายการ</span>
+      <button class="xbtn" onclick="exportXlsx()" title="ส่งออกเป็น Excel รวมยอดรายเดือน">⬇ ส่งออก Excel</button></h2>
+    <div id="sumChips" class="sumchips"></div>
     <p class="sub">คลิกแถวเพื่อดึงข้อมูลขึ้นมาแก้ไข</p>
     <div class="tablewrap">
       <table>
-        <thead><tr>
-          <th>ช่วงเวลา</th><th>อำเภอ</th><th>คดี</th><th>ผู้ต้องหา</th><th>ผู้ค้า</th>
-          <th>ยาบ้า</th><th>ไอซ์(ก.)</th><th>นำเข้า</th><th>ผ่านบำบัด</th><th>อัปเดต</th>
-        </tr></thead>
+        <thead id="thead"></thead>
         <tbody id="tbody"><tr><td colspan="10" class="empty">— ยังไม่มีข้อมูล —</td></tr></tbody>
       </table>
     </div>
@@ -272,21 +278,72 @@ async function loadAll(){
     else setStatus('โหลดไม่สำเร็จ: '+d.error,'err');
   }catch(e){setStatus('⚠ '+e.message+' (ตรวจสอบ URL API)','err');}
 }
+const FLABEL={cases:'คดี',suspects:'ผู้ต้องหา',dealers:'ผู้ค้า',methPills:'ยาบ้า',iceGrams:'ไอซ์(ก.)',
+  intoTreatment:'นำเข้าบำบัด',completedTreatment:'ผ่านบำบัด',xray:'คัดกรอง',psychiatric:'จิตเวช',
+  psychScreen:'คัดกรองจิต',psychTreated:'ผ่านบำบัดจิตเวช'};
+function tableCols(){const r=window.__ROLE;
+  if(r&&r.agency)return AGENCY_FIELDS[r.agency];
+  return ['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment'];}
+function scopedRows(){const r=window.__ROLE;
+  return (r&&r.dist!=='ALL')?ALLROWS.filter(x=>x.district===r.dist):ALLROWS;}
+function buildHead(){const cols=tableCols();
+  $('thead').innerHTML='<tr><th>ช่วงเวลา</th><th>อำเภอ</th>'+cols.map(c=>'<th>'+FLABEL[c]+'</th>').join('')+'<th>อัปเดต</th></tr>';}
 function renderTable(){
-  const role=window.__ROLE;
-  const rows=(role&&role!=='ALL')?ALLROWS.filter(r=>r.district===role):ALLROWS;
+  const cols=tableCols(), rows=scopedRows();
   $('countPill').textContent=rows.length+' รายการ';
-  if(!rows.length){$('tbody').innerHTML='<tr><td colspan="10" class="empty">— ยังไม่มีข้อมูล —</td></tr>';return;}
+  const span=cols.length+3;
+  if(!rows.length){$('tbody').innerHTML='<tr><td colspan="'+span+'" class="empty">— ยังไม่มีข้อมูล —</td></tr>';return;}
   const sorted=[...rows].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
   $('tbody').innerHTML=sorted.map(r=>`
     <tr onclick='pick(${JSON.stringify(JSON.stringify(r))})'>
       <td>${shortMonth(r.month)} ${r.year} • ส.${r.week}</td>
       <td>${r.district}</td>
-      <td>${n(r.cases)}</td><td>${n(r.suspects)}</td><td>${n(r.dealers)}</td>
-      <td>${n(r.methPills)}</td><td>${n(r.iceGrams)}</td>
-      <td>${n(r.intoTreatment)}</td><td>${n(r.completedTreatment)}</td>
+      ${cols.map(c=>'<td>'+n(r[c])+'</td>').join('')}
       <td style="color:var(--muted)">${fmtTime(r.updatedAt)}</td>
     </tr>`).join('');
+}
+/* ชิปยอดสะสมของปีที่เลือก (ทบยอดทุกแถวในขอบเขตสิทธิ์) */
+function renderSum(){
+  const el=$('sumChips');if(!el)return;
+  const y=Number(f_year.value)||0;
+  const rows=scopedRows().filter(r=>Number(r.year)===y);
+  const cols=tableCols();
+  const t={};cols.forEach(c=>t[c]=0);
+  rows.forEach(r=>cols.forEach(c=>t[c]+=Number(r[c])||0));
+  el.innerHTML='<div class="sc">ยอดสะสมปี '+y+' (ตัวตั้ง + ที่กรอกทบ)</div>'+
+    cols.map(c=>'<div class="sc">'+FLABEL[c]+'<b>'+n(t[c])+'</b></div>').join('');
+}
+/* ส่งออก Excel: ชีต "รายสัปดาห์" (นำกลับมา import ต่อได้) + ชีตสรุปรายเดือน */
+function exportXlsx(){
+  if(typeof XLSX==='undefined'){setStatus('⚠ ไลบรารี Excel ยังโหลดไม่เสร็จ ลองใหม่','err');return;}
+  const rows=scopedRows();
+  if(!rows.length){setStatus('ยังไม่มีข้อมูลให้ส่งออก','err');return;}
+  const HEAD=['ปี (พ.ศ.)','เดือน (1-12)','สัปดาห์ (1-5)','อำเภอ','คดีจับกุม','ผู้ต้องหา','ผู้ค้ารายสำคัญ','ยาบ้า (เม็ด)','ไอซ์ (กรัม)','นำเข้าบำบัด','ผ่านการบำบัด','ค้นหา/คัดกรอง','จิตเวช (SMI-V)','คัดกรองผู้มีอาการทางจิต','ผ่านการบำบัดจิตเวช','หมายเหตุ','ผู้กรอก'];
+  const toRow=r=>[r.year,r.month,r.week,r.district,r.cases||0,r.suspects||0,r.dealers||0,r.methPills||0,r.iceGrams||0,
+    r.intoTreatment||0,r.completedTreatment||0,r.xray||0,r.psychiatric||0,r.psychScreen||0,r.psychTreated||0,r.notes||'',r.updatedBy||''];
+  const wb=XLSX.utils.book_new();
+  const sorted=[...rows].sort((a,b)=>(a.year-b.year)||(a.month-b.month)||(a.week-b.week)||String(a.district).localeCompare(b.district,'th'));
+  const ws=XLSX.utils.aoa_to_sheet([['แบบกรอกข้อมูลสถานการณ์รายสัปดาห์ (สำหรับนำเข้าสู่ระบบ Real-time)'],HEAD,...sorted.map(toRow)]);
+  ws['!cols']=HEAD.map((h,i)=>({wch:i===3?18:(i>=15?22:12)}));
+  XLSX.utils.book_append_sheet(wb,ws,'รายสัปดาห์');
+  /* สรุปรายเดือน: ชีตละเดือน รวมยอดต่ออำเภอ + แถวรวม */
+  const MN=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const NUMF=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric','psychScreen','psychTreated'];
+  const key=r=>r.year+'-'+r.month;
+  const months=[...new Set(sorted.map(key))];
+  months.forEach(k=>{const [yy,mm]=k.split('-').map(Number);
+    const mrows=sorted.filter(r=>Number(r.year)===yy&&Number(r.month)===mm);
+    const byD={};mrows.forEach(r=>{if(!byD[r.district]){byD[r.district]={};NUMF.forEach(ff=>byD[r.district][ff]=0);}
+      NUMF.forEach(ff=>byD[r.district][ff]+=Number(r[ff])||0);});
+    const H2=['อำเภอ','คดีจับกุม','ผู้ต้องหา','ผู้ค้ารายสำคัญ','ยาบ้า (เม็ด)','ไอซ์ (กรัม)','นำเข้าบำบัด','ผ่านการบำบัด','ค้นหา/คัดกรอง','จิตเวช (SMI-V)','คัดกรองผู้มีอาการทางจิต','ผ่านการบำบัดจิตเวช'];
+    const body=Object.keys(byD).map(d=>[d,...NUMF.map(ff=>byD[d][ff])]);
+    const tot=['รวม',...NUMF.map(ff=>body.reduce((a,r2)=>a+(r2[NUMF.indexOf(ff)+1]||0),0))];
+    const ws2=XLSX.utils.aoa_to_sheet([['ยอดสะสมประจำเดือน '+MN[mm]+' '+yy],H2,...body,tot]);
+    ws2['!cols']=H2.map((h,i)=>({wch:i===0?18:13}));
+    XLSX.utils.book_append_sheet(wb,ws2,('สรุป '+MN[mm]+yy).replace(/\./g,''));
+  });
+  XLSX.writeFile(wb,'ประวัติสะสม-ยาเสพติด-หนองบัวลำภู-'+Date.now()+'.xlsx');
+  setStatus('✓ ส่งออก Excel เรียบร้อย (นำไปเติมแล้ว import กลับได้)','ok');
 }
 function pick(js){const r=JSON.parse(JSON.parse(js));
   f_year.value=r.year;f_month.value=r.month;f_week.value=r.week;f_district.value=r.district;
@@ -316,12 +373,12 @@ async function save(){
   $('saveBtn').disabled=true;setStatus('กำลังบันทึก...','muted');
   const p={action:'save',year:f_year.value,month:f_month.value,week:f_week.value,district:f_district.value,
            notes:$('d_notes').value,user:$('d_user').value||'-',pin};
-  FIELDS.forEach(f=>p[f]=$('d_'+f).value||0);
+  scopedFields().forEach(f=>p[f]=$('d_'+f).value||0);  /* ส่งเฉพาะช่องที่มีสิทธิ์ — ช่องอื่นเซิร์ฟเวอร์คงค่าเดิม */
   try{
     const d=await jsonp(p);
     if(d.ok){
       setStatus(d.mode==='update'?'✓ แก้ไขข้อมูลเดิมเรียบร้อย':'✓ บันทึกรายการใหม่เรียบร้อย','ok');
-      await loadAll();markExist(true);
+      await loadAll();renderSum();markExist(true);
     }else setStatus('✗ '+d.error,'err');
   }catch(e){setStatus('⚠ '+e.message,'err');}
   finally{$('saveBtn').disabled=false;}
@@ -336,7 +393,18 @@ function setStatus(t,c){const s=$('status');s.textContent=t;s.className='status 
 function startApp(){initUI();loadAll();}
 
 /* ===== ล็อกด้วย PIN รายอำเภอ (เก็บเฉพาะ hash — ไม่มีรหัสจริงในไฟล์) ===== */
-const ADMIN_HASH='cac8c4ea35cdae36492bbb8d8e0b1442f28c0b1d47c42350d6b20b5f5e467e06'; /* ผู้ดูแล — ทุกอำเภอ */
+const ADMIN_HASH='cac8c4ea35cdae36492bbb8d8e0b1442f28c0b1d47c42350d6b20b5f5e467e06'; /* ผู้ดูแล — ทุกอำเภอ ทุกช่อง */
+/* หน่วยงานหลัก: เข้าได้ทุกอำเภอ แต่กรอกได้เฉพาะช่องของหน่วยงานตน */
+const APIN_HASH={
+  'a52a1e0fc88fd36aae87d36b714cfcf23ad96a271ebecb33d613882c756c8b66':'POLICE',  /* ตำรวจภูธรจังหวัด */
+  '33e9620830fb1321fc17d28224b9955113f9985d42425c1b78590af274858c0c':'HEALTH'   /* สาธารณสุขจังหวัด */
+};
+const AGENCY_FIELDS={
+  POLICE:['cases','suspects','dealers','methPills','iceGrams'],
+  HEALTH:['intoTreatment','completedTreatment','xray','psychiatric','psychScreen','psychTreated']
+};
+const AGENCY_LABEL={POLICE:'ตำรวจภูธรจังหวัดหนองบัวลำภู',HEALTH:'สำนักงานสาธารณสุขจังหวัดหนองบัวลำภู'};
+function scopedFields(){const r=window.__ROLE;return (r&&r.agency)?AGENCY_FIELDS[r.agency]:FIELDS;}
 const DPIN_HASH={
   '56e360ea53c66417c39f2a5d2b8827b7917436775ebfdbb4b9d19497e959460c':'เมืองหนองบัวลำภู',
   '37d1b209a8265ee2dd5badeb8a44d0c12c06663bb5a4133eef1c92c2159e67a8':'ศรีบุญเรือง',
@@ -346,7 +414,11 @@ const DPIN_HASH={
   '71c6cfa8eeefd61c6ac8307df7ed30b6cfb1a3d8281059641862561fc9e23a5f':'นาวัง'
 };
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-function roleOf(h){return h===ADMIN_HASH?'ALL':(DPIN_HASH[h]||null);}
+function roleOf(h){
+  if(h===ADMIN_HASH)return{dist:'ALL',agency:null,label:'ADMIN'};
+  if(APIN_HASH[h])return{dist:'ALL',agency:APIN_HASH[h],label:APIN_HASH[h]};
+  if(DPIN_HASH[h])return{dist:DPIN_HASH[h],agency:null,label:DPIN_HASH[h]};
+  return null;}
 async function tryUnlock(){const el=document.getElementById('gpin');const v=(el.value||'').trim();
   const role=v?roleOf(await sha(v)):null;
   if(role){try{sessionStorage.setItem('nbl_pin',v);}catch(e){}openApp(v,role);}
@@ -356,16 +428,22 @@ function openApp(pin,role){window.__PIN=pin;window.__ROLE=role;const g=document.
   applyRole();}
 function applyRole(){
   const role=window.__ROLE, tag=document.getElementById('roleTag');
-  if(role&&role!=='ALL'){
-    f_district.innerHTML='<option value="'+role+'">'+role+'</option>';
-    f_district.value=role; f_district.disabled=true;
+  /* ล็อกอำเภอสำหรับ PIN รายอำเภอ */
+  if(role&&role.dist!=='ALL'){
+    f_district.innerHTML='<option value="'+role.dist+'">'+role.dist+'</option>';
+    f_district.value=role.dist; f_district.disabled=true;
   }else if(f_district){f_district.disabled=false;}
+  /* ซ่อนช่องที่หน่วยงานไม่มีสิทธิ์ */
+  const allow=scopedFields();
+  FIELDS.forEach(fd=>{const el=document.getElementById('d_'+fd);if(!el)return;
+    const box=el.closest('div');if(box)box.style.display=allow.includes(fd)?'':'none';});
   if(tag){
-    if(role==='ALL'){tag.textContent='👑 ผู้ดูแลระบบ • จัดการได้ทุกอำเภอ';tag.className='roletag admin';}
-    else{tag.textContent='📍 เจ้าหน้าที่ '+(role==='เมืองหนองบัวลำภู'?'อ.เมืองหนองบัวลำภู':'อ.'+role)+' • แก้ได้เฉพาะอำเภอนี้';tag.className='roletag';}
+    if(role&&role.label==='ADMIN'){tag.textContent='👑 ผู้ดูแลระบบ • จัดการได้ทุกอำเภอ ทุกหัวข้อ';tag.className='roletag admin';}
+    else if(role&&role.agency){tag.textContent='🏛 '+AGENCY_LABEL[role.agency]+' • กรอกเฉพาะหัวข้อของหน่วยงาน (ทุกอำเภอ)';tag.className='roletag agency';}
+    else if(role){tag.textContent='📍 เจ้าหน้าที่ '+(role.dist==='เมืองหนองบัวลำภู'?'อ.เมืองหนองบัวลำภู':'อ.'+role.dist)+' • แก้ได้เฉพาะอำเภอนี้';tag.className='roletag';}
     tag.style.display='inline-block';
   }
-  renderTable(); loadOne();
+  buildHead(); renderTable(); renderSum(); loadOne();
 }
 function togglePin(){const i=document.getElementById('gpin'),b=document.getElementById('geye');const on=i.type==='password';i.type=on?'text':'password';b.textContent=on?'🙈':'👁';i.focus();}
 function logout(){try{sessionStorage.removeItem('nbl_pin');}catch(e){}window.__PIN=null;window.__ROLE=null;location.reload();}

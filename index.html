@@ -176,6 +176,7 @@
   .g2-df{display:block;height:100%;border-radius:10px;transition:width .7s ease}
   @media(max-width:560px){.g2-dists{grid-template-columns:1fr}}
   /* ===== เซคชันจิตเวชรายอำเภอ ===== */
+  .lastupd{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:4px 12px;margin-left:auto;font-family:'Kanit',sans-serif}
   .psy-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin:6px 0 16px}
   .psy-chip{flex:1;min-width:158px;border-radius:14px;padding:14px 16px;background:linear-gradient(180deg,#fff,#faf8ff);border:1px solid var(--line);display:flex;flex-direction:column;gap:1px;box-shadow:0 3px 10px rgba(15,29,61,.04)}
   .psy-chip span{font-size:.79rem;color:var(--muted);font-family:'Kanit',sans-serif}
@@ -488,7 +489,7 @@
 </div>
 
 <div class="wrap">
-  <div class="filters">
+  <div class="filters"><span id="lastUpd" class="lastupd" style="display:none"></span>
     <div class="fld"><label>ปีงบประมาณ (พ.ศ.)</label><select id="fl_year"></select></div>
     <div class="fld"><label>ช่วงเวลา</label><select id="fl_month"></select></div>
     <div class="fld"><label>สัปดาห์</label><select id="fl_week"></select></div>
@@ -636,10 +637,10 @@ function sel(){return{year:+document.getElementById('fl_year').value,
                       district:document.getElementById('fl_district').value};}
 function sum(rows){const o={};FIELDS.forEach(f=>o[f]=0);rows.forEach(r=>FIELDS.forEach(f=>o[f]+=Number(r[f])||0));return o;}
 /* รวมแบบไม่ทบยอด: เก็บค่าล่าสุดต่ออำเภอ (ภาพรวมสะสม) แล้วรวมข้ามอำเภอ */
-function aggLatest(rows){const byD={};
-  rows.forEach(r=>{const t=(Number(r.year)||0)*10000+(Number(r.month)||0)*100+(Number(r.week)||0);
-    if(!byD[r.district]||t>byD[r.district]._t){byD[r.district]=Object.assign({},r,{_t:t});}});
-  const o={};FIELDS.forEach(f=>o[f]=0);Object.values(byD).forEach(r=>FIELDS.forEach(f=>o[f]+=Number(r[f])||0));return o;}
+/* ยอดสะสม (ทบยอด): ผลรวมของทุกรายการที่กรอก/นำเข้าในช่วงที่เลือก
+   ข้อมูลตั้งต้นที่นำเข้า = ตัวตั้ง แถวที่กรอกเพิ่ม = บวกทบเข้าไป */
+function aggLatest(rows){const o={};FIELDS.forEach(f=>o[f]=0);
+  rows.forEach(r=>FIELDS.forEach(f=>o[f]+=Number(r[f])||0));return o;}
 function filt(y,m,d,w){return ALL.filter(r=>r.year===y&&(m===0||r.month===m)&&(d==='all'||r.district===d)&&(!w||r.week===w));}
 
 /* ===================== RENDER ===================== */
@@ -647,17 +648,17 @@ function emptyBox(msg){return`<div class="emptybox"><span class="eb-ic"><svg vie
 function toggleMenu(e){if(e)e.stopPropagation();var m=document.getElementById('htmore');if(m)m.classList.toggle('open');}
 if(typeof document!=='undefined'&&document.addEventListener){document.addEventListener('click',function(e){var m=document.getElementById('htmore');if(m&&m.classList.contains('open')&&e.target&&e.target.closest&&!e.target.closest('.moreWrap'))m.classList.remove('open');});}
 const TIPS={
-kpi:'ยอดรวมทั้งจังหวัดของปีงบประมาณที่เลือก ใช้ค่าล่าสุด (snapshot) ของแต่ละอำเภอมารวมกัน ไม่ใช่ผลบวกสะสมทุกสัปดาห์',
+kpi:'ยอดสะสมทั้งจังหวัดของช่วงที่เลือก = ข้อมูลตั้งต้นที่นำเข้า + ทุกยอดที่กรอกเพิ่มรายสัปดาห์ (ทบยอดอัตโนมัติ)',
 year:'เทียบผลรวมทั้งจังหวัด 3 ปีงบประมาณ (2567–2569) แยกตามตัวชี้วัด คำนวณจากผลรวมรายอำเภอตามแผนปฏิบัติการ',
 dist:'เทียบแต่ละอำเภอข้าม 3 ปีงบประมาณ แท่งสีเข้มสุดคือปีล่าสุด (2569) เลือกตัวชี้วัดได้จากปุ่มด้านบน',
 distlive:'เทียบจำนวนคดีจับกุมกับผู้นำเข้าบำบัดของแต่ละอำเภอ ในช่วงเวลาที่เลือก (ข้อมูลสดจากการกรอก/นำเข้า)',
-rank:'จัดอันดับอำเภอจากมากไปน้อยตามค่าล่าสุดในช่วงที่เลือก สลับดูคดี/บำบัด/ยาบ้าได้',
+rank:'จัดอันดับอำเภอจากมากไปน้อยตามยอดสะสมในช่วงที่เลือก สลับดูคดี/บำบัด/ยาบ้าได้',
 trend:'แนวโน้มของตัวชี้วัดหลักในปีที่เลือก แสดงรายเดือนเมื่อเลือกทั้งปี หรือรายสัปดาห์เมื่อเจาะจงเดือน',
 type:'แสดงผลแต่ละตัวชี้วัดพร้อมตัวเลขและหน่วยจริง เทียบความมาก-น้อยเฉพาะภายในด้านเดียวกัน ไม่นำคนละหน่วยมารวมเป็นวงกลมเดียว',
 hist:'ข้อมูลย้อนหลังรายปีจากแผนปฏิบัติการ ใช้เป็นบริบทเทียบกับสถานการณ์ปัจจุบัน',
 ytrend:'ภาพรวมแนวโน้มทั้งจังหวัดรายปีงบประมาณ',
 goal:'การดำเนินงานตามเป้าหมายตามแผน เช่น การจับกุมคดีข้อหาร้ายแรง 300 ราย และการบำบัด 1,227 ราย',
-gauge:'เกจสเกล 0–100%% ของเป้า เข็มชี้ผลงานจริงรายอำเภอ (ตามข้อมูลที่กรอก) โซนสี: แดง<60%% เหลือง60–90%% เขียว≥90%%',
+gauge:'เกจสเกล 0–100%% ของเป้า เข็มชี้ยอดสะสมจริงรายอำเภอ (ตัวตั้งที่นำเข้า + ยอดที่กรอกทบ) โซนสี: แดง<60%% เหลือง60–90%% เขียว≥90%%',
 map:'เลือกตัวชี้วัดได้จากปุ่มด้านบน แผนที่ไล่สีตามค่า (เข้ม=มาก อ่อน=น้อย) ของปีงบประมาณ 2569 ชี้พื้นที่เพื่อดูรายละเอียดรายอำเภอ',
 psy:'ติดตามงานสุขภาพจิตจากยาเสพติดรายอำเภอ: จำนวนที่คัดกรองผู้มีอาการทางจิต ผู้พบอาการจิตเวช (SMI-V) และผู้ที่ผ่านการบำบัดจิตเวช พร้อมร้อยละผ่านบำบัด',
 table:'ตารางรวมทุกตัวชี้วัดรายอำเภอ แบ่งสีตามประเภท: ปราบปราม • ข้อหาร้ายแรง • ของกลาง • บำบัด • เฝ้าระวัง',
@@ -700,6 +701,10 @@ function render(){
   const yearRows=filt(s.year,0,s.district,0),ySum=aggLatest(yearRows);
 
   window.__curS=s;
+  (function(){const el=document.getElementById('lastUpd');if(!el)return;
+    let mx='';ALL.forEach(r=>{if(r.updatedAt&&String(r.updatedAt)>mx)mx=String(r.updatedAt);});
+    if(mx){try{const d=new Date(mx);el.textContent='🕐 ข้อมูลอัปเดตล่าสุด '+d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.';el.style.display='inline-flex';}catch(e){}}
+  })();
   (function(){var ph=document.getElementById('printSub');if(ph){var per=s.month===0?('ปีงบประมาณ พ.ศ. '+s.year):((s.week>0?'สัปดาห์ที่ '+s.week+' • ':'')+MONTHS[s.month-1]+' '+s.year);var dist=(s.district&&s.district!=='all')?(' • อำเภอ'+s.district):' • ทุกอำเภอ';ph.textContent='ข้อมูล: '+per+dist+' • ออกรายงานเมื่อ '+new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});}})();
   renderRibbon(curSum,curLabel);
 

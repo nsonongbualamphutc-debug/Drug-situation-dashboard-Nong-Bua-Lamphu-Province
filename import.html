@@ -105,7 +105,7 @@
 </style>
 </head>
 <body>
-<div id="gate" class="gate"><div class="gatebox"><div class="glogo">🔒</div><h2>เข้าสู่ระบบเจ้าหน้าที่</h2><p>กรอก PIN เพื่อเข้าใช้งานระบบนำเข้า Excel</p><input id="gpin" type="password" inputmode="numeric" placeholder="••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()"><button onclick="tryUnlock()">ปลดล็อก</button><div class="gerr" id="gerr"></div></div></div>
+<div id="gate" class="gate"><div class="gatebox"><div class="glogo">🔒</div><h2>เข้าสู่ระบบเจ้าหน้าที่</h2><p>กรอก PIN ผู้ดูแล หรือ PIN หน่วยงาน (ตำรวจภูธรฯ / สสจ.)<br>ระบบจะบันทึกเฉพาะหัวข้อตามสิทธิ์ของท่าน</p><input id="gpin" type="password" inputmode="numeric" placeholder="••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()"><button onclick="tryUnlock()">ปลดล็อก</button><div class="gerr" id="gerr"></div></div></div>
 
 <div class="hero"><div class="hbar">
   <div class="logos">
@@ -354,14 +354,18 @@ function toast(t){const el=document.getElementById('toast');el.textContent=t;el.
 function startApp(){}
 
 /* ===== ล็อกด้วย PIN (เก็บเฉพาะค่า hash ไม่ใช่รหัสจริง) ===== */
-const PIN_HASH='cac8c4ea35cdae36492bbb8d8e0b1442f28c0b1d47c42350d6b20b5f5e467e06';
+const OK_HASH={
+  'cac8c4ea35cdae36492bbb8d8e0b1442f28c0b1d47c42350d6b20b5f5e467e06':'ผู้ดูแลระบบ',
+  'a52a1e0fc88fd36aae87d36b714cfcf23ad96a271ebecb33d613882c756c8b66':'ตำรวจภูธรจังหวัด',
+  '33e9620830fb1321fc17d28224b9955113f9985d42425c1b78590af274858c0c':'สาธารณสุขจังหวัด'
+};
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 async function tryUnlock(){const el=document.getElementById('gpin');const v=(el.value||'').trim();
-  if(v&&await sha(v)===PIN_HASH){try{sessionStorage.setItem('nbl_pin',v);}catch(e){}openApp(v);}
+  if(v&&OK_HASH[await sha(v)]){try{sessionStorage.setItem('nbl_pin',v);}catch(e){}openApp(v);}
   else{document.getElementById('gerr').textContent='PIN ไม่ถูกต้อง';el.value='';el.focus();}}
 function openApp(pin){window.__PIN=pin;const g=document.getElementById('gate');if(g)g.style.display='none';
   if(!window.__started){window.__started=1;startApp();}}
-async function gateInit(){try{const sv=sessionStorage.getItem('nbl_pin');if(sv&&await sha(sv)===PIN_HASH){openApp(sv);return;}}catch(e){}
+async function gateInit(){try{const sv=sessionStorage.getItem('nbl_pin');if(sv&&OK_HASH[await sha(sv)]){openApp(sv);return;}}catch(e){}
   const el=document.getElementById('gpin');if(el)el.focus();}
 
 gateInit();
