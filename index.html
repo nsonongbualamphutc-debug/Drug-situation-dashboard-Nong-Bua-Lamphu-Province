@@ -176,6 +176,9 @@
   .g2-df{display:block;height:100%;border-radius:10px;transition:width .7s ease}
   @media(max-width:560px){.g2-dists{grid-template-columns:1fr}}
   /* ===== เซคชันจิตเวชรายอำเภอ ===== */
+  .agchip{font-family:'Kanit';font-weight:600;font-size:.68rem;padding:2px 9px;border-radius:14px;margin-left:6px}
+  .agchip.agpol{background:#fdecea;color:#b03427}
+  .agchip.aghea{background:#e6f6f0;color:#0e7a55}
   .lastupd{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:4px 12px;margin-left:auto;font-family:'Kanit',sans-serif}
   .psy-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin:6px 0 16px}
   .psy-chip{flex:1;min-width:158px;border-radius:14px;padding:14px 16px;background:linear-gradient(180deg,#fff,#faf8ff);border:1px solid var(--line);display:flex;flex-direction:column;gap:1px;box-shadow:0 3px 10px rgba(15,29,61,.04)}
@@ -822,12 +825,18 @@ function districtChartCard(s){
 
 /* ---------- บันทึกเหตุการณ์ (notes) ---------- */
 function notesCard(s){
-  const rows=filt(s.year,s.month,s.district,s.week).filter(r=>r.notes&&String(r.notes).trim())
-            .sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
-  const body=rows.length?rows.map(r=>`<div class="fitem">
-    <div class="fhead"><span class="chip">${r.district}</span>
+  const src=filt(s.year,s.month,s.district,s.week);
+  const items=[];
+  src.forEach(r=>{
+    if(r.notes&&String(r.notes).trim())items.push({r,txt:r.notes,ag:'',agc:''});
+    if(r.notesPolice&&String(r.notesPolice).trim())items.push({r,txt:r.notesPolice,ag:'ตำรวจภูธรฯ',agc:'agpol'});
+    if(r.notesHealth&&String(r.notesHealth).trim())items.push({r,txt:r.notesHealth,ag:'สสจ.',agc:'aghea'});
+  });
+  items.sort((a,b)=>(b.r.updatedAt||'').localeCompare(a.r.updatedAt||''));
+  const body=items.length?items.map(({r,txt,ag,agc})=>`<div class="fitem">
+    <div class="fhead"><span class="chip">${r.district}</span>${ag?`<span class="agchip ${agc}">${ag}</span>`:''}
       <span class="fper">${ic('calendar')} ${SM[r.month]} ${r.year} • สัปดาห์ ${r.week}</span></div>
-    <div class="ftxt">${esc(r.notes)}</div>
+    <div class="ftxt">${esc(txt)}</div>
     <div class="fby">โดย ${esc(r.updatedBy||'-')} • ${fmtTime(r.updatedAt)}</div></div>`).join('')
     :`<div class="feedempty">— ยังไม่มีบันทึกเหตุการณ์ในช่วงที่เลือก —</div>`;
   return`<div class="card">
@@ -1310,7 +1319,7 @@ function aiSummary(s,c,p,curLabel,prevLabel,ySum,curRows){
     if(pD<50)w.push('การจับกุมคดีข้อหาร้ายแรงยังห่างเป้า ควรเร่งสืบสวนขยายผล');
     if(c.psychiatric>0)w.push(`พบผู้มีอาการจิตเวช (SMI-V) ${nf(c.psychiatric)} คน — ติดตามดูแลต่อเนื่องเพื่อลดความเสี่ยงในชุมชน`);
     if(w.length){lines.push({t:`<span class="hl">ข้อควรเร่งรัด:</span> ${w.join(' • ')}`,warn:true});plain.push('ข้อควรเร่งรัด: '+w.join('; '));}
-    const ev=curRows.filter(r=>r.notes&&String(r.notes).trim()).map(r=>`${r.district}: ${String(r.notes).trim()}`);
+    const ev=[];curRows.forEach(r=>{if(r.notes&&String(r.notes).trim())ev.push(`${r.district}: ${String(r.notes).trim()}`);if(r.notesPolice&&String(r.notesPolice).trim())ev.push(`${r.district} (ตร.): ${String(r.notesPolice).trim()}`);if(r.notesHealth&&String(r.notesHealth).trim())ev.push(`${r.district} (สสจ.): ${String(r.notesHealth).trim()}`);});
     if(ev.length){lines.push({t:`เหตุการณ์สำคัญ: ${ev.slice(0,3).join(' / ')}${ev.length>3?' …':''}`});plain.push('เหตุการณ์สำคัญ: '+ev.slice(0,3).join(' / '));}
   }
   window.__plain=`สรุปสถานการณ์ยาเสพติด จ.หนองบัวลำภู — ${curLabel} (${scope})\n`+plain.map(x=>'• '+x).join('\n')+`\n(ออกรายงานโดยระบบแดชบอร์ด ${new Date().toLocaleString('th-TH')})`;
@@ -1366,9 +1375,9 @@ function toast(t){const el=document.getElementById('toast');el.textContent=t;el.
 function toggleTheme(){const d=document.body.getAttribute('data-theme')==='dark';
   document.body.setAttribute('data-theme',d?'light':'dark');paintStatic();render();}
 function exportCSV(){
-  const head=['ปี','เดือน','สัปดาห์','อำเภอ','คดี','ผู้ต้องหา','ผู้ค้า','ยาบ้า_เม็ด','ไอซ์_กรัม','นำเข้าบำบัด','ผ่านการบำบัด','คัดกรอง','จิตเวช','คัดกรองจิต','ผ่านบำบัดจิตเวช','หมายเหตุ','ผู้กรอก','อัปเดต'];
+  const head=['ปี','เดือน','สัปดาห์','อำเภอ','คดี','ผู้ต้องหา','ผู้ค้า','ยาบ้า_เม็ด','ไอซ์_กรัม','นำเข้าบำบัด','ผ่านการบำบัด','คัดกรอง','จิตเวช','คัดกรองจิต','ผ่านบำบัดจิตเวช','หมายเหตุ','หมายเหตุ ตร.','หมายเหตุ สสจ.','ผู้กรอก','อัปเดต'];
   const lines=ALL.map(r=>[r.year,r.month,r.week,r.district,r.cases,r.suspects,r.dealers,r.methPills,r.iceGrams,
-    r.intoTreatment,r.completedTreatment,r.xray,r.psychiatric,r.psychScreen,r.psychTreated,'"'+String(r.notes||'').replace(/"/g,'""')+'"','"'+String(r.updatedBy||'').replace(/"/g,'""')+'"',r.updatedAt]);
+    r.intoTreatment,r.completedTreatment,r.xray,r.psychiatric,r.psychScreen,r.psychTreated,'"'+String(r.notes||'').replace(/"/g,'""')+'"','"'+String(r.notesPolice||'').replace(/"/g,'""')+'"','"'+String(r.notesHealth||'').replace(/"/g,'""')+'"','"'+String(r.updatedBy||'').replace(/"/g,'""')+'"',r.updatedAt]);
   const csv='\uFEFF'+[head,...lines].map(a=>a.join(',')).join('\n');
   const b=new Blob([csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
   a.href=u;a.download='drug_situation_nbl_'+Date.now()+'.csv';a.click();URL.revokeObjectURL(u);toast('ส่งออก CSV แล้ว');

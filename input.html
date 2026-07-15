@@ -54,6 +54,7 @@
   .sectiontag{display:inline-flex;align-items:center;gap:7px;font-family:'Kanit';font-weight:600;font-size:.9rem;
               padding:6px 12px;border-radius:8px;margin:8px 0 14px}
   .tag-enf{background:var(--enfbg);color:var(--enf)} .tag-tx{background:var(--txbg);color:var(--tx)}
+  .tag-note{background:#fdf6e9;color:#8a5a10}.tag-note .dot{background:#d8a64a}
   .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
   .btnbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
   .btn{font-family:'Kanit';font-weight:600;font-size:.95rem;padding:12px 26px;border-radius:11px;border:none;cursor:pointer;transition:.15s}
@@ -174,7 +175,7 @@
   </div>
 
   <!-- ด้านปราบปราม -->
-  <div class="card">
+  <div class="card" id="card_enf">
     <span class="sectiontag tag-enf"><span class="dot"></span>ด้านการปราบปราม / จับกุม</span>
     <div class="grid g3">
       <div><label>จำนวนคดี <span class="hint">(คดี)</span></label><input id="d_cases" type="number" min="0" value="0"></div>
@@ -186,7 +187,7 @@
   </div>
 
   <!-- ด้านบำบัด -->
-  <div class="card">
+  <div class="card" id="card_tx">
     <span class="sectiontag tag-tx"><span class="dot"></span>ด้านการบำบัดฟื้นฟู / สาธารณสุข</span>
     <div class="grid g4">
       <div><label>นำเข้าบำบัด <span class="hint">(คน • เทียบเป้า 1,227)</span></label><input id="d_intoTreatment" type="number" min="0" value="0"></div>
@@ -196,8 +197,13 @@
       <div><label>การคัดกรองผู้มีอาการทางจิต <span class="hint">(คน)</span></label><input id="d_psychScreen" type="number" min="0" value="0"></div>
       <div><label>ผ่านการบำบัดจิตเวช <span class="hint">(คน)</span></label><input id="d_psychTreated" type="number" min="0" value="0"></div>
     </div>
-    <div style="margin-top:14px"><label>หมายเหตุ / เหตุการณ์สำคัญในสัปดาห์</label>
-      <input id="d_notes" type="text" placeholder="เช่น จับกุมเครือข่ายรายสำคัญพื้นที่ตำบล... / ปิดล้อมตรวจค้น ฯลฯ"></div>
+
+  <!-- หมายเหตุ (แยกตามหน่วยงาน) -->
+  <div class="card" id="card_notes">
+    <span class="sectiontag tag-note"><span class="dot"></span><span id="notesTag">หมายเหตุ / เหตุการณ์สำคัญในสัปดาห์</span></span>
+    <div><input id="d_notes" type="text" placeholder="เช่น จับกุมเครือข่ายรายสำคัญพื้นที่ตำบล... / ปิดล้อมตรวจค้น ฯลฯ"></div>
+  </div>
+
   </div>
 
   <!-- บันทึก -->
@@ -320,7 +326,7 @@ function exportXlsx(){
   if(!rows.length){setStatus('ยังไม่มีข้อมูลให้ส่งออก','err');return;}
   const HEAD=['ปี (พ.ศ.)','เดือน (1-12)','สัปดาห์ (1-5)','อำเภอ','คดีจับกุม','ผู้ต้องหา','ผู้ค้ารายสำคัญ','ยาบ้า (เม็ด)','ไอซ์ (กรัม)','นำเข้าบำบัด','ผ่านการบำบัด','ค้นหา/คัดกรอง','จิตเวช (SMI-V)','คัดกรองผู้มีอาการทางจิต','ผ่านการบำบัดจิตเวช','หมายเหตุ','ผู้กรอก'];
   const toRow=r=>[r.year,r.month,r.week,r.district,r.cases||0,r.suspects||0,r.dealers||0,r.methPills||0,r.iceGrams||0,
-    r.intoTreatment||0,r.completedTreatment||0,r.xray||0,r.psychiatric||0,r.psychScreen||0,r.psychTreated||0,r.notes||'',r.updatedBy||''];
+    r.intoTreatment||0,r.completedTreatment||0,r.xray||0,r.psychiatric||0,r.psychScreen||0,r.psychTreated||0,[r.notes,r.notesPolice&&('[ตร.] '+r.notesPolice),r.notesHealth&&('[สสจ.] '+r.notesHealth)].filter(Boolean).join(' | '),r.updatedBy||''];
   const wb=XLSX.utils.book_new();
   const sorted=[...rows].sort((a,b)=>(a.year-b.year)||(a.month-b.month)||(a.week-b.week)||String(a.district).localeCompare(b.district,'th'));
   const ws=XLSX.utils.aoa_to_sheet([['แบบกรอกข้อมูลสถานการณ์รายสัปดาห์ (สำหรับนำเข้าสู่ระบบ Real-time)'],HEAD,...sorted.map(toRow)]);
@@ -357,7 +363,9 @@ async function loadOne(){
   if(local){fillForm(local);markExist(true);}
   else{clearValues();markExist(false);}
 }
-function fillForm(r){FIELDS.forEach(f=>$('d_'+f).value=r[f]??0);$('d_notes').value=r.notes||'';markExist(true);}
+function myNotes(r){const a=window.__ROLE&&window.__ROLE.agency;
+  return a==='POLICE'?(r.notesPolice||''):a==='HEALTH'?(r.notesHealth||''):(r.notes||'');}
+function fillForm(r){FIELDS.forEach(f=>$('d_'+f).value=r[f]??0);$('d_notes').value=myNotes(r);markExist(true);}
 function clearValues(){FIELDS.forEach(f=>$('d_'+f).value=0);$('d_notes').value='';}
 function clearForm(){clearValues();$('d_user').value='';markExist(false);setStatus('ล้างฟอร์มแล้ว','muted');}
 function markExist(yes){
@@ -433,10 +441,18 @@ function applyRole(){
     f_district.innerHTML='<option value="'+role.dist+'">'+role.dist+'</option>';
     f_district.value=role.dist; f_district.disabled=true;
   }else if(f_district){f_district.disabled=false;}
-  /* ซ่อนช่องที่หน่วยงานไม่มีสิทธิ์ */
+  /* ซ่อนช่องที่หน่วยงานไม่มีสิทธิ์ + ซ่อนการ์ดกลุ่มที่ว่างทั้งใบ */
   const allow=scopedFields();
   FIELDS.forEach(fd=>{const el=document.getElementById('d_'+fd);if(!el)return;
     const box=el.closest('div');if(box)box.style.display=allow.includes(fd)?'':'none';});
+  const hasEnf=AGENCY_FIELDS.POLICE.some(fd=>allow.includes(fd));
+  const hasTx=AGENCY_FIELDS.HEALTH.some(fd=>allow.includes(fd));
+  const cEnf=document.getElementById('card_enf');if(cEnf)cEnf.style.display=hasEnf?'':'none';
+  const cTx=document.getElementById('card_tx');if(cTx)cTx.style.display=hasTx?'':'none';
+  const nt=document.getElementById('notesTag');
+  if(nt){nt.textContent=role&&role.agency==='POLICE'?'หมายเหตุของตำรวจภูธรจังหวัด (แยกจากหน่วยอื่น)'
+      :role&&role.agency==='HEALTH'?'หมายเหตุของสำนักงานสาธารณสุขจังหวัด (แยกจากหน่วยอื่น)'
+      :'หมายเหตุ / เหตุการณ์สำคัญในสัปดาห์';}
   if(tag){
     if(role&&role.label==='ADMIN'){tag.textContent='👑 ผู้ดูแลระบบ • จัดการได้ทุกอำเภอ ทุกหัวข้อ';tag.className='roletag admin';}
     else if(role&&role.agency){tag.textContent='🏛 '+AGENCY_LABEL[role.agency]+' • กรอกเฉพาะหัวข้อของหน่วยงาน (ทุกอำเภอ)';tag.className='roletag agency';}
