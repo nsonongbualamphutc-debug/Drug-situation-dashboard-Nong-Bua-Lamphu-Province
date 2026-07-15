@@ -226,7 +226,8 @@ function parseWeekly(r){if(!r)return null;const out=[];
     out.push({year:num(row[0]),month:num(row[1]),week:num(row[2]),district:String(row[3]).trim(),
       cases:num(row[4]),suspects:num(row[5]),dealers:num(row[6]),methPills:num(row[7]),iceGrams:num(row[8]),
       intoTreatment:num(row[9]),completedTreatment:num(row[10]),xray:num(row[11]),psychiatric:num(row[12]),
-      notes:String(row[13]||''),user:String(row[14]||'นำเข้า Excel')});}});
+      psychScreen:num(row[13]),psychTreated:num(row[14]),
+      notes:String(row[15]||''),user:String(row[16]||'นำเข้า Excel')});}});
   return out;}
 
 /* ---------- บล็อกแสดงผล ---------- */

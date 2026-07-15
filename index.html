@@ -175,6 +175,25 @@
   .g2-dt{height:7px;background:#e9edf3;border-radius:10px;overflow:hidden}
   .g2-df{display:block;height:100%;border-radius:10px;transition:width .7s ease}
   @media(max-width:560px){.g2-dists{grid-template-columns:1fr}}
+  /* ===== เซคชันจิตเวชรายอำเภอ ===== */
+  .psy-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin:6px 0 16px}
+  .psy-chip{flex:1;min-width:158px;border-radius:14px;padding:14px 16px;background:linear-gradient(180deg,#fff,#faf8ff);border:1px solid var(--line);display:flex;flex-direction:column;gap:1px;box-shadow:0 3px 10px rgba(15,29,61,.04)}
+  .psy-chip span{font-size:.79rem;color:var(--muted);font-family:'Kanit',sans-serif}
+  .psy-chip b{font-family:'Kanit',sans-serif;font-weight:800;font-size:1.72rem;line-height:1.15}
+  .psy-chip i{font-size:.72rem;color:var(--muted);font-style:normal}
+  .psy-chip.s1{border-left:4px solid #7b54b8}.psy-chip.s1 b{color:#7b54b8}
+  .psy-chip.s2{border-left:4px solid #c0392b}.psy-chip.s2 b{color:#c0392b}
+  .psy-chip.s3{border-left:4px solid #0e8a6b}.psy-chip.s3 b{color:#0e8a6b}
+  .psy-arrow{display:flex;align-items:center;color:#c3ccda;font-size:1.5rem;font-weight:800}
+  @media(max-width:640px){.psy-arrow{display:none}.psy-chip{min-width:0;flex:1 1 46%}}
+  .psytbl{width:100%;border-collapse:collapse;font-size:.86rem;min-width:520px}
+  .psytbl th{background:#f3eefb;color:#5b3ea0;font-family:'Kanit',sans-serif;font-weight:600;font-size:.82rem;padding:10px 12px;text-align:center;border-bottom:2px solid #e3d8f5}
+  .psytbl th:first-child{text-align:left}
+  .psytbl td{padding:9px 12px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .psytbl td.pd{text-align:left;font-weight:600;color:var(--ink2);font-family:'Kanit',sans-serif}
+  .psytbl td.ppct{font-family:'Kanit',sans-serif;font-weight:700;color:#7b54b8}
+  .psytbl tbody tr:hover{background:#faf8ff}
+  .psytbl tfoot td{background:#f3eefb;font-family:'Kanit',sans-serif;font-weight:700;color:#3d2a70;border-top:2px solid #e3d8f5}
   .mini{display:grid;grid-template-columns:110px 1fr auto;gap:11px;align-items:center;font-size:.79rem;margin-top:10px}
   .mini .mname{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mini .mtrack{height:8px;background:var(--soft);border-radius:10px;overflow:hidden}
@@ -527,7 +546,7 @@ const PLAN_TREAT={
   HIST[y].cases=c;HIST[y].suspects=sp;HIST[y].meth=m;HIST[y].ice=Math.round(i*100)/100;
 });
 
-const FIELDS=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric'];
+const FIELDS=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric','psychScreen','psychTreated'];
 let ALL=[],charts={};
 
 /* ===================== ไอคอน SVG (ธีมยาเสพติด) ===================== */
@@ -640,6 +659,7 @@ ytrend:'ภาพรวมแนวโน้มทั้งจังหวัด
 goal:'การดำเนินงานตามเป้าหมายตามแผน เช่น การจับกุมคดีข้อหาร้ายแรง 300 ราย และการบำบัด 1,227 ราย',
 gauge:'เกจสเกล 0–100%% ของเป้า เข็มชี้ผลงานจริงรายอำเภอ (ตามข้อมูลที่กรอก) โซนสี: แดง<60%% เหลือง60–90%% เขียว≥90%%',
 map:'เลือกตัวชี้วัดได้จากปุ่มด้านบน แผนที่ไล่สีตามค่า (เข้ม=มาก อ่อน=น้อย) ของปีงบประมาณ 2569 ชี้พื้นที่เพื่อดูรายละเอียดรายอำเภอ',
+psy:'ติดตามงานสุขภาพจิตจากยาเสพติดรายอำเภอ: จำนวนที่คัดกรองผู้มีอาการทางจิต ผู้พบอาการจิตเวช (SMI-V) และผู้ที่ผ่านการบำบัดจิตเวช พร้อมร้อยละผ่านบำบัด',
 table:'ตารางรวมทุกตัวชี้วัดรายอำเภอ แบ่งสีตามประเภท: ปราบปราม • ข้อหาร้ายแรง • ของกลาง • บำบัด • เฝ้าระวัง',
 plan:'เป้าหมายและผลการดำเนินงานตามแผนปฏิบัติการของจังหวัด ปีงบประมาณ 2567–2569',
 submission:'จำนวนอำเภอที่ส่งข้อมูลแล้วในรอบล่าสุด (ครบ = 6 อำเภอ) ใช้ติดตามความครบถ้วนของการรายงาน',
@@ -690,6 +710,7 @@ function render(){
     ${yearCompareSection()}
     ${gaugeSection(s)}
     ${districtCompareSection()}
+    ${psychSection(s)}
     <div class="row r2">${goalCard(s,yearRows)}${trendCard(s)}</div>
     <div class="row r2b">${mapCard()}${notesCard(s)}</div>
     ${rankCard()}
@@ -1208,6 +1229,29 @@ function tween(node,from,to,dec,dur){const t0=performance.now();
 /* ---------- เปรียบเทียบรายอำเภอ (รายปี) ---------- */
 const DC_METRICS=[{k:'cases',kk:'c',l:'คดี',u:'คดี',c:'--enf'},{k:'suspects',kk:'s',l:'ผู้ต้องหา',u:'คน',c:'--watch'},{k:'meth',kk:'m',l:'ยาบ้า',u:'เม็ด',c:'--seize'},{k:'ice',kk:'i',l:'ไอซ์',u:'กรัม',c:'--tx'}];
 const DSHORT=d=>d==='เมืองหนองบัวลำภู'?'เมือง':d;
+function psychSection(s){
+  const R=DISTRICTS.map(d=>{const g=aggLatest(filt(s.year,s.month,d,s.week));return {d,scr:g.psychScreen||0,smi:g.psychiatric||0,trt:g.psychTreated||0};});
+  const T={scr:0,smi:0,trt:0};R.forEach(r=>{T.scr+=r.scr;T.smi+=r.smi;T.trt+=r.trt;});
+  const pc=(a,b)=>b?Math.round(a/b*100):0;
+  const rows=R.map(r=>`<tr><td class="pd">${r.d}</td><td>${nf(r.scr)}</td><td>${nf(r.smi)}</td><td>${nf(r.trt)}</td><td class="ppct">${r.smi?pc(r.trt,r.smi)+'%':'—'}</td></tr>`).join('');
+  return `<div class="sechead"><span style="color:#7b54b8">${ic('brain')}</span> การคัดกรองและบำบัดจิตเวชจากยาเสพติด รายอำเภอ${infoDot('psy')}</div>
+  <div class="card" style="margin-bottom:18px">
+    <p class="csub">กระบวนการดูแลสุขภาพจิต: คัดกรอง → พบผู้มีอาการจิตเวช (SMI-V) → ผ่านการบำบัดจิตเวช • ตามข้อมูลที่กรอกในช่วงที่เลือก</p>
+    <div class="psy-flow">
+      <div class="psy-chip s1"><span>คัดกรองผู้มีอาการทางจิต</span><b>${nf(T.scr)}</b><i>คน</i></div>
+      <div class="psy-arrow">→</div>
+      <div class="psy-chip s2"><span>ผู้มีอาการจิตเวช (SMI-V)</span><b>${nf(T.smi)}</b><i>คน</i></div>
+      <div class="psy-arrow">→</div>
+      <div class="psy-chip s3"><span>ผ่านการบำบัดจิตเวช</span><b>${nf(T.trt)}</b><i>คน</i></div>
+    </div>
+    <div style="overflow-x:auto"><table class="psytbl">
+      <thead><tr><th>อำเภอ</th><th>คัดกรองผู้มีอาการทางจิต</th><th>ผู้มีอาการจิตเวช (SMI-V)</th><th>ผ่านการบำบัดจิตเวช</th><th>ร้อยละผ่านบำบัด</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td class="pd">รวมทั้งจังหวัด</td><td>${nf(T.scr)}</td><td>${nf(T.smi)}</td><td>${nf(T.trt)}</td><td class="ppct">${T.smi?pc(T.trt,T.smi)+'%':'—'}</td></tr></tfoot>
+    </table></div>
+  </div>`;
+}
+
 function districtCompareSection(){
   const m=window.__dcMetric||'cases';
   const b=x=>`<button class="rkbtn ${m===x.k?'on':''}" data-dm="${x.k}" onclick="setDC('${x.k}')">${x.l}</button>`;
@@ -1317,9 +1361,9 @@ function toast(t){const el=document.getElementById('toast');el.textContent=t;el.
 function toggleTheme(){const d=document.body.getAttribute('data-theme')==='dark';
   document.body.setAttribute('data-theme',d?'light':'dark');paintStatic();render();}
 function exportCSV(){
-  const head=['ปี','เดือน','สัปดาห์','อำเภอ','คดี','ผู้ต้องหา','ผู้ค้า','ยาบ้า_เม็ด','ไอซ์_กรัม','นำเข้าบำบัด','ผ่านการบำบัด','คัดกรอง','จิตเวช','หมายเหตุ','ผู้กรอก','อัปเดต'];
+  const head=['ปี','เดือน','สัปดาห์','อำเภอ','คดี','ผู้ต้องหา','ผู้ค้า','ยาบ้า_เม็ด','ไอซ์_กรัม','นำเข้าบำบัด','ผ่านการบำบัด','คัดกรอง','จิตเวช','คัดกรองจิต','ผ่านบำบัดจิตเวช','หมายเหตุ','ผู้กรอก','อัปเดต'];
   const lines=ALL.map(r=>[r.year,r.month,r.week,r.district,r.cases,r.suspects,r.dealers,r.methPills,r.iceGrams,
-    r.intoTreatment,r.completedTreatment,r.xray,r.psychiatric,'"'+String(r.notes||'').replace(/"/g,'""')+'"','"'+String(r.updatedBy||'').replace(/"/g,'""')+'"',r.updatedAt]);
+    r.intoTreatment,r.completedTreatment,r.xray,r.psychiatric,r.psychScreen,r.psychTreated,'"'+String(r.notes||'').replace(/"/g,'""')+'"','"'+String(r.updatedBy||'').replace(/"/g,'""')+'"',r.updatedAt]);
   const csv='\uFEFF'+[head,...lines].map(a=>a.join(',')).join('\n');
   const b=new Blob([csv],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
   a.href=u;a.download='drug_situation_nbl_'+Date.now()+'.csv';a.click();URL.revokeObjectURL(u);toast('ส่งออก CSV แล้ว');

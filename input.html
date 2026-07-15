@@ -186,6 +186,8 @@
       <div><label>ผ่านการบำบัด <span class="hint">(คน)</span></label><input id="d_completedTreatment" type="number" min="0" value="0"></div>
       <div><label>ค้นหา/คัดกรอง (Re-X-ray) <span class="hint">(คน)</span></label><input id="d_xray" type="number" min="0" value="0"></div>
       <div><label>ผู้มีอาการจิตเวช (SMI-V) <span class="hint">(คน)</span></label><input id="d_psychiatric" type="number" min="0" value="0"></div>
+      <div><label>การคัดกรองผู้มีอาการทางจิต <span class="hint">(คน)</span></label><input id="d_psychScreen" type="number" min="0" value="0"></div>
+      <div><label>ผ่านการบำบัดจิตเวช <span class="hint">(คน)</span></label><input id="d_psychTreated" type="number" min="0" value="0"></div>
     </div>
     <div style="margin-top:14px"><label>หมายเหตุ / เหตุการณ์สำคัญในสัปดาห์</label>
       <input id="d_notes" type="text" placeholder="เช่น จับกุมเครือข่ายรายสำคัญพื้นที่ตำบล... / ปิดล้อมตรวจค้น ฯลฯ"></div>
@@ -226,7 +228,7 @@
 const API = 'https://script.google.com/macros/s/AKfycbznWom8v4aRLQdHWFj6SAw-TfcPcyBhQFkpBzvYR3TM5GCvXWbRToAd_tA6YGLSvJZN/exec';
 const DISTRICTS = ['เมืองหนองบัวลำภู','ศรีบุญเรือง','นากลาง','โนนสัง','สุวรรณคูหา','นาวัง'];
 const MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-const FIELDS = ['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric'];
+const FIELDS = ['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric','psychScreen','psychTreated'];
 let ALLROWS = [];
 
 /* ====== JSONP ====== */
