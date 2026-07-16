@@ -645,6 +645,19 @@ function sum(rows){const o={};FIELDS.forEach(f=>o[f]=0);rows.forEach(r=>FIELDS.f
 function aggLatest(rows){const o={};FIELDS.forEach(f=>o[f]=0);
   rows.forEach(r=>FIELDS.forEach(f=>o[f]+=Number(r[f])||0));return o;}
 function filt(y,m,d,w){return ALL.filter(r=>r.year===y&&(m===0||r.month===m)&&(d==='all'||r.district===d)&&(!w||r.week===w));}
+/* เชื่อมข้อมูลไร้รอยต่อ: เขียนทับค่าปี 2569 (รายอำเภอ+รวมจังหวัด) ด้วยยอดสะสม live
+   จากที่กรอก/นำเข้า → ตาราง กราฟ แผนที่ การ์ด วิ่งพร้อมกันทั้งหมด
+   (ปี 2567/2568 = ประวัติคงเดิม, TARGET/เป้าหมาย = คงเดิม) */
+function buildLive2569(){
+  if(!ALL.some(r=>Number(r.year)===2569))return; /* ยังไม่มีข้อมูลปี 69 → คงค่าตั้งต้น */
+  DISTRICTS.forEach(d=>{const g=aggLatest(filt(2569,0,d,0));
+    PLAN_ARREST[d].y69={c:g.cases,s:g.suspects,m:g.methPills,i:Math.round(g.iceGrams*100)/100};
+    PLAN_TREAT[d].p69=g.completedTreatment;
+    PLAN_TREAT[d].pct=PLAN_TREAT[d].t69?g.completedTreatment/PLAN_TREAT[d].t69*100:0;
+  });
+  let c=0,sp=0,m=0,i=0;DISTRICTS.forEach(d=>{const y=PLAN_ARREST[d].y69;c+=y.c;sp+=y.s;m+=y.m;i+=y.i;});
+  HIST[2569].cases=c;HIST[2569].suspects=sp;HIST[2569].meth=m;HIST[2569].ice=Math.round(i*100)/100;
+}
 
 /* ===================== RENDER ===================== */
 function emptyBox(msg){return`<div class="emptybox"><span class="eb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.4h.01"/></svg></span><div><b>ยังไม่มีข้อมูลรอบนี้</b><span>${msg||'เริ่มกรอกหรือนำเข้าข้อมูลรายสัปดาห์ของช่วงที่เลือก แล้วกราฟจะแสดงผลทันที'}</span></div></div>`;}
@@ -704,6 +717,7 @@ function render(){
   const yearRows=filt(s.year,0,s.district,0),ySum=aggLatest(yearRows);
 
   window.__curS=s;
+  buildLive2569();
   (function(){const el=document.getElementById('lastUpd');if(!el)return;
     let mx='';ALL.forEach(r=>{if(r.updatedAt&&String(r.updatedAt)>mx)mx=String(r.updatedAt);});
     if(mx){try{const d=new Date(mx);el.textContent='🕐 ข้อมูลอัปเดตล่าสุด '+d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.';el.style.display='inline-flex';}catch(e){}}
@@ -985,7 +999,7 @@ function yearCompareSection(){
         <thead><tr><th>ตัวชี้วัด</th><th>ปี 2567</th><th>ปี 2568</th><th>ปี 2569</th><th>เปลี่ยนแปลง (69/68)</th></tr></thead>
         <tbody>${YM.map(trow).join('')}</tbody>
       </table></div>
-      <p class="note">${ic('alert')} คำนวณจากผลรวมรายอำเภอตามแผนปฏิบัติการ</p></div>`;
+      <p class="note">${ic('alert')} ปี 2569 = ยอดสะสมล่าสุด (ทบยอดจากที่กรอก/นำเข้ารายสัปดาห์อัตโนมัติ) • ปี 2567–2568 เป็นข้อมูลย้อนหลัง</p></div>`;
 }
 function drawYearMetrics(){
   const yrs=[2567,2568,2569];
@@ -1016,10 +1030,10 @@ function planSection(){
   const tSum=DISTRICTS.reduce((a,d)=>{const t=PLAN_TREAT[d];a.p67+=t.p67;a.p68+=t.p68;a.t69+=t.t69;a.p69+=t.p69;return a;},{p67:0,p68:0,t69:0,p69:0});
   const tPct=tSum.t69?(tSum.p69/tSum.t69*100):0;
   return`
-  <div class="sechead">${ic('flag')} ข้อมูลตามแผนปฏิบัติการ จังหวัดหนองบัวลำภู (ปีงบประมาณ 2567–2569)${infoDot('plan')}</div>
+  <div class="sechead">${ic('flag')} ผลการดำเนินงานรายอำเภอ จังหวัดหนองบัวลำภู (ปี 2567–2568 ย้อนหลัง • ปี 2569 สะสม live)${infoDot('plan')}</div>
   <div class="card" style="margin-bottom:16px">
     <h3><span style="color:var(--enf)">${ic('shield')}</span> ผลการจับกุมคดียาเสพติด รายอำเภอ</h3>
-    <p class="csub">จำนวนคดี / ยาบ้า (เม็ด) / ไอซ์ (กรัม) แยกตามปีงบประมาณ</p>
+    <p class="csub">จำนวนคดี / ยาบ้า (เม็ด) / ไอซ์ (กรัม) แยกตามปีงบประมาณ • ปี 2569 รันตามยอดที่กรอกสะสม</p>
     <div class="tablewrap"><table>
       <thead>
         <tr><th rowspan="2">อำเภอ</th><th colspan="3">ปี 2567</th><th colspan="3">ปี 2568</th><th colspan="3">ปี 2569</th></tr>
@@ -1036,7 +1050,7 @@ function planSection(){
   <div class="row r2b">
     <div class="card">
       <h3><span style="color:var(--tx)">${ic('treat')}</span> ผลการบำบัดฟื้นฟูผู้เสพ/ผู้ติด รายอำเภอ</h3>
-      <p class="csub">ผลงานปี 2567–2568 และเป้า/ผล/ร้อยละ ปี 2569</p>
+      <p class="csub">ผลงานปี 2567–2568 (ย้อนหลัง) และเป้า/ผลสะสม/ร้อยละ ปี 2569 (รันตามที่กรอก)</p>
       <div class="tablewrap"><table>
         <thead><tr><th>อำเภอ</th><th>2567</th><th>2568</th><th>เป้า 69</th><th>ผล 69</th><th>ร้อยละ</th></tr></thead>
         <tbody>${tRows}</tbody>
