@@ -215,7 +215,6 @@
       <div><label>ค้นหา/คัดกรอง (Re-X-ray) <span class="hint">(คน)</span></label><input id="d_xray" type="number" min="0" value="0"></div>
       <div><label>ผู้มีอาการจิตเวช (SMI-V) <span class="hint">(คน)</span></label><input id="d_psychiatric" type="number" min="0" value="0"></div>
       <div><label>การคัดกรองผู้มีอาการทางจิต <span class="hint">(คน)</span></label><input id="d_psychScreen" type="number" min="0" value="0"></div>
-      <div><label>ผ่านการบำบัดจิตเวช <span class="hint">(คน)</span></label><input id="d_psychTreated" type="number" min="0" value="0"></div>
     </div>
     <div class="notesin"><label>หมายเหตุ / เหตุการณ์สำคัญด้านบำบัดฟื้นฟู</label>
       <input id="d_notesHealth" type="text" placeholder="เช่น เปิดค่ายบำบัดฟื้นฟู / ส่งต่อผู้ป่วยจิตเวช ฯลฯ"></div>
@@ -261,7 +260,7 @@
 const API = 'https://script.google.com/macros/s/AKfycbznWom8v4aRLQdHWFj6SAw-TfcPcyBhQFkpBzvYR3TM5GCvXWbRToAd_tA6YGLSvJZN/exec';
 const DISTRICTS = ['เมืองหนองบัวลำภู','ศรีบุญเรือง','นากลาง','โนนสัง','สุวรรณคูหา','นาวัง'];
 const MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-const FIELDS = ['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric','psychScreen','psychTreated'];
+const FIELDS = ['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric','psychScreen'];
 let ALLROWS = [];
 
 /* ====== JSONP ====== */
@@ -311,7 +310,7 @@ async function loadAll(){
 }
 const FLABEL={cases:'คดี',suspects:'ผู้ต้องหา',dealers:'ผู้ค้า',methPills:'ยาบ้า',iceGrams:'ไอซ์(ก.)',
   intoTreatment:'นำเข้าบำบัด',completedTreatment:'ผ่านบำบัด',xray:'คัดกรอง',psychiatric:'จิตเวช',
-  psychScreen:'คัดกรองจิต',psychTreated:'ผ่านบำบัดจิตเวช'};
+  psychScreen:'คัดกรองจิต'};
 function tableCols(){const r=window.__ROLE;
   if(r&&r.agency)return AGENCY_FIELDS[r.agency];
   return ['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment'];}
@@ -363,14 +362,14 @@ function exportXlsx(){
   XLSX.utils.book_append_sheet(wb,ws,'รายสัปดาห์');
   /* สรุปรายเดือน: ชีตละเดือน รวมยอดต่ออำเภอ + แถวรวม */
   const MN=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const NUMF=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric','psychScreen','psychTreated'];
+  const NUMF=['cases','suspects','dealers','methPills','iceGrams','intoTreatment','completedTreatment','xray','psychiatric','psychScreen'];
   const key=r=>r.year+'-'+r.month;
   const months=[...new Set(sorted.map(key))];
   months.forEach(k=>{const [yy,mm]=k.split('-').map(Number);
     const mrows=sorted.filter(r=>Number(r.year)===yy&&Number(r.month)===mm);
     const byD={};mrows.forEach(r=>{if(!byD[r.district]){byD[r.district]={};NUMF.forEach(ff=>byD[r.district][ff]=0);}
       NUMF.forEach(ff=>byD[r.district][ff]+=Number(r[ff])||0);});
-    const H2=['อำเภอ','คดีจับกุม','ผู้ต้องหา','ผู้ค้ารายสำคัญ','ยาบ้า (เม็ด)','ไอซ์ (กรัม)','นำเข้าบำบัด','ผ่านการบำบัด','ค้นหา/คัดกรอง','จิตเวช (SMI-V)','คัดกรองผู้มีอาการทางจิต','ผ่านการบำบัดจิตเวช'];
+    const H2=['อำเภอ','คดีจับกุม','ผู้ต้องหา','ผู้ค้ารายสำคัญ','ยาบ้า (เม็ด)','ไอซ์ (กรัม)','นำเข้าบำบัด','ผ่านการบำบัด','ค้นหา/คัดกรอง','จิตเวช (SMI-V)','คัดกรองผู้มีอาการทางจิต'];
     const body=Object.keys(byD).map(d=>[d,...NUMF.map(ff=>byD[d][ff])]);
     const tot=['รวม',...NUMF.map(ff=>body.reduce((a,r2)=>a+(r2[NUMF.indexOf(ff)+1]||0),0))];
     const ws2=XLSX.utils.aoa_to_sheet([['ยอดสะสมประจำเดือน '+MN[mm]+' '+yy],H2,...body,tot]);
@@ -527,7 +526,7 @@ const APIN_HASH={
 };
 const AGENCY_FIELDS={
   POLICE:['cases','suspects','dealers','methPills','iceGrams'],
-  HEALTH:['intoTreatment','completedTreatment','xray','psychiatric','psychScreen','psychTreated']
+  HEALTH:['intoTreatment','completedTreatment','xray','psychiatric','psychScreen']
 };
 const AGENCY_LABEL={POLICE:'ตำรวจภูธรจังหวัดหนองบัวลำภู',HEALTH:'สำนักงานสาธารณสุขจังหวัดหนองบัวลำภู'};
 function scopedFields(){const r=window.__ROLE;return (r&&r.agency)?AGENCY_FIELDS[r.agency]:FIELDS;}
