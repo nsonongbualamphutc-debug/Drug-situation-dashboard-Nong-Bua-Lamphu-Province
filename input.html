@@ -56,6 +56,9 @@
   .tag-enf{background:var(--enfbg);color:var(--enf)} .tag-tx{background:var(--txbg);color:var(--tx)}
   .tag-note{background:#fdf6e9;color:#8a5a10}.tag-note .dot{background:#d8a64a}
   .notesin{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+  .fhelp{margin-top:6px;font-size:.73rem;color:var(--muted);font-family:'Kanit',sans-serif;line-height:1.3}
+  .fhelp b{color:#1b4e8e;font-size:.92rem;font-family:'Kanit',sans-serif}
+  .fhelp .up{color:#0e7a4f;font-weight:600}
   .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
   .btnbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
   .btn{font-family:'Kanit';font-weight:600;font-size:.95rem;padding:12px 26px;border-radius:11px;border:none;cursor:pointer;transition:.15s}
@@ -71,7 +74,7 @@
   th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
   thead th{background:#f6f8fc;color:var(--ink2);font-weight:600;position:sticky;top:0}
   tbody tr:hover{background:#f9fbff;cursor:pointer}
-  .tablewrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:12px}
+  .tablewrap{overflow:auto;max-height:540px;border:1px solid var(--line);border-radius:12px}
   .empty{padding:30px;text-align:center;color:var(--muted)}
   .req::after{content:" *";color:var(--enf)}
   @media(max-width:560px){
@@ -360,12 +363,36 @@ async function loadOne(){
   const local=ALLROWS.find(r=>r.id===key);
   if(local){fillForm(local);markExist(true);}
   else{clearValues();markExist(false);}
+  updateLiveTotals();
 }
 function fillForm(r){FIELDS.forEach(f=>$('d_'+f).value=r[f]??0);
   if($('d_notesPolice'))$('d_notesPolice').value=r.notesPolice||'';
   if($('d_notesHealth'))$('d_notesHealth').value=r.notesHealth||'';
-  markExist(true);}
-function clearValues(){FIELDS.forEach(f=>$('d_'+f).value=0);if($('d_notesPolice'))$('d_notesPolice').value='';if($('d_notesHealth'))$('d_notesHealth').value='';}
+  markExist(true);updateLiveTotals();}
+function clearValues(){FIELDS.forEach(f=>$('d_'+f).value=0);if($('d_notesPolice'))$('d_notesPolice').value='';if($('d_notesHealth'))$('d_notesHealth').value='';updateLiveTotals&&updateLiveTotals();}
+function fieldBase(field){ /* ยอดสะสมทั้งปีของอำเภอที่เลือก (ไม่รวมสัปดาห์ที่กำลังแก้) */
+  const y=Number(f_year.value)||0, d=f_district.value, key=currentKey(); let t=0;
+  ALLROWS.forEach(r=>{if(Number(r.year)===y&&r.district===d&&r.id!==key)t+=Number(r[field])||0;});
+  return t;
+}
+function updateLiveTotals(){
+  const d=f_district.value, dn=(d&&d!=='all')?('อ.'+(d==='เมืองหนองบัวลำภู'?'เมือง':d)):'จังหวัด';
+  scopedFields().forEach(field=>{
+    const el=document.getElementById('h_'+field); if(!el)return;
+    const base=fieldBase(field), v=Number($('d_'+field).value)||0, tot=base+v;
+    const isIce=field==='iceGrams';
+    const fmt=x=>isIce?Number(x).toLocaleString('th-TH',{maximumFractionDigits:2}):n(x);
+    el.innerHTML='สะสมทั้งปี '+dn+' → <b>'+fmt(tot)+'</b>'+(v>0?' <span class="up">(สัปดาห์นี้ +'+fmt(v)+')</span>':'');
+  });
+}
+function initLiveTotals(){
+  FIELDS.forEach(field=>{const inp=document.getElementById('d_'+field);if(!inp||document.getElementById('h_'+field))return;
+    const h=document.createElement('div');h.className='fhelp';h.id='h_'+field;
+    inp.parentNode.appendChild(h);
+    inp.addEventListener('input',updateLiveTotals);});
+  updateLiveTotals();
+}
+
 function clearForm(){clearValues();$('d_user').value='';markExist(false);setStatus('ล้างฟอร์มแล้ว','muted');}
 function markExist(yes){
   $('existPill').innerHTML=yes
@@ -457,7 +484,7 @@ function applyRole(){
     else if(role){tag.textContent='📍 เจ้าหน้าที่ '+(role.dist==='เมืองหนองบัวลำภู'?'อ.เมืองหนองบัวลำภู':'อ.'+role.dist)+' • แก้ได้เฉพาะอำเภอนี้';tag.className='roletag';}
     tag.style.display='inline-block';
   }
-  buildHead(); renderTable(); renderSum(); loadOne();
+  buildHead(); renderTable(); renderSum(); initLiveTotals(); loadOne();
 }
 function togglePin(){const i=document.getElementById('gpin'),b=document.getElementById('geye');const on=i.type==='password';i.type=on?'text':'password';b.textContent=on?'🙈':'👁';i.focus();}
 function logout(){try{sessionStorage.removeItem('nbl_pin');}catch(e){}window.__PIN=null;window.__ROLE=null;location.reload();}
