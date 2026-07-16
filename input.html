@@ -59,6 +59,12 @@
   .fhelp{margin-top:6px;font-size:.73rem;color:var(--muted);font-family:'Kanit',sans-serif;line-height:1.3}
   .fhelp b{color:#1b4e8e;font-size:.92rem;font-family:'Kanit',sans-serif}
   .fhelp .up{color:#0e7a4f;font-weight:600}
+  .btn-danger{background:#fdecea;color:#c0392b;border:1px solid #f0c9c4}
+  .btn-danger:hover{background:#f8d7d1}
+  .lastedit{margin-top:12px;font-size:.8rem;color:#8a5a10;background:#fdf6e9;border:1px solid #eed9ac;border-radius:9px;padding:8px 13px;display:inline-block;font-family:'Kanit',sans-serif}
+  .histfilter{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+  .histfilter select,.histfilter input{padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;background:#fff}
+  .histfilter input{flex:1;min-width:180px}
   .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
   .btnbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
   .btn{font-family:'Kanit';font-weight:600;font-size:.95rem;padding:12px 26px;border-radius:11px;border:none;cursor:pointer;transition:.15s}
@@ -176,6 +182,7 @@
       <div><label class="req">สัปดาห์ที่</label><select id="f_week"></select></div>
       <div><label class="req">อำเภอ</label><select id="f_district"></select></div>
     </div>
+    <div id="lastEdit" class="lastedit" style="display:none"></div>
   </div>
 
   <!-- ด้านปราบปราม -->
@@ -215,8 +222,10 @@
     </div>
     <div class="btnbar">
       <button class="btn btn-primary" id="saveBtn" onclick="save()">💾 บันทึกข้อมูลสัปดาห์นี้</button>
+      <button class="btn btn-ghost" onclick="copyPrev()" title="เริ่มจากค่าสัปดาห์ก่อนหน้าของอำเภอนี้">📋 คัดลอกสัปดาห์ก่อน</button>
       <button class="btn btn-ghost" onclick="loadOne()">↻ ดึงข้อมูลเดิม</button>
       <button class="btn btn-ghost" onclick="clearForm()">ล้างฟอร์ม</button>
+      <button class="btn btn-danger" id="delBtn" onclick="delRow()" style="display:none">🗑 ลบสัปดาห์นี้</button>
       <span class="status muted" id="status">พร้อมใช้งาน</span>
     </div>
   </div>
@@ -227,6 +236,10 @@
       <button class="xbtn" onclick="exportXlsx()" title="ส่งออกเป็น Excel รวมยอดรายเดือน">⬇ ส่งออก Excel</button></h2>
     <div id="sumChips" class="sumchips"></div>
     <p class="sub">คลิกแถวเพื่อดึงข้อมูลขึ้นมาแก้ไข</p>
+    <div class="histfilter">
+      <select id="hf_dist"></select>
+      <input id="hf_search" type="text" placeholder="🔍 ค้นหา (อำเภอ / ผู้กรอก / หมายเหตุ)">
+    </div>
     <div class="tablewrap">
       <table>
         <thead id="thead"></thead>
@@ -272,6 +285,8 @@ function initUI(){
   fillSelect(f_week,[1,2,3,4,5],v=>v,v=>'สัปดาห์ที่ '+v);
   fillSelect(f_district,DISTRICTS,v=>v,v=>v);
   [f_year,f_month,f_week,f_district].forEach(el=>el.addEventListener('change',loadOne));
+  if($('hf_dist')){$('hf_dist').innerHTML='<option value="">ทุกอำเภอ</option>'+DISTRICTS.map(d=>`<option>${d}</option>`).join('');
+    $('hf_dist').addEventListener('change',renderTable);$('hf_search').addEventListener('input',renderTable);}
 }
 const $=id=>document.getElementById(id);
 const f_year=$('f_year'),f_month=$('f_month'),f_week=$('f_week'),f_district=$('f_district');
@@ -296,7 +311,10 @@ function scopedRows(){const r=window.__ROLE;
 function buildHead(){const cols=tableCols();
   $('thead').innerHTML='<tr><th>ช่วงเวลา</th><th>อำเภอ</th>'+cols.map(c=>'<th>'+FLABEL[c]+'</th>').join('')+'<th>อัปเดต</th></tr>';}
 function renderTable(){
-  const cols=tableCols(), rows=scopedRows();
+  const cols=tableCols(); let rows=scopedRows();
+  const fd=$('hf_dist')?$('hf_dist').value:'', q=($('hf_search')?$('hf_search').value:'').trim().toLowerCase();
+  if(fd)rows=rows.filter(r=>r.district===fd);
+  if(q)rows=rows.filter(r=>[r.district,r.updatedBy,r.notes,r.notesPolice,r.notesHealth,shortMonth(Number(r.month))].join(' ').toLowerCase().includes(q));
   $('countPill').textContent=rows.length+' รายการ';
   const span=cols.length+3;
   if(!rows.length){$('tbody').innerHTML='<tr><td colspan="'+span+'" class="empty">— ยังไม่มีข้อมูล —</td></tr>';return;}
@@ -368,6 +386,7 @@ async function loadOne(){
 function fillForm(r){FIELDS.forEach(f=>$('d_'+f).value=r[f]??0);
   if($('d_notesPolice'))$('d_notesPolice').value=r.notesPolice||'';
   if($('d_notesHealth'))$('d_notesHealth').value=r.notesHealth||'';
+  const le=$('lastEdit'); if(le){if(r.updatedBy||r.updatedAt){le.innerHTML='✏️ แก้ไขล่าสุดโดย <b>'+(r.updatedBy||'-')+'</b> • '+fmtTime(r.updatedAt);le.style.display='inline-block';}else le.style.display='none';}
   markExist(true);updateLiveTotals();}
 function clearValues(){FIELDS.forEach(f=>$('d_'+f).value=0);if($('d_notesPolice'))$('d_notesPolice').value='';if($('d_notesHealth'))$('d_notesHealth').value='';updateLiveTotals&&updateLiveTotals();}
 function fieldBase(field){ /* ยอดสะสมทั้งปีของอำเภอที่เลือก (ไม่รวมสัปดาห์ที่กำลังแก้) */
@@ -393,17 +412,45 @@ function initLiveTotals(){
   updateLiveTotals();
 }
 
-function clearForm(){clearValues();$('d_user').value='';markExist(false);setStatus('ล้างฟอร์มแล้ว','muted');}
+async function delRow(){
+  if(!window.__PIN){setStatus('กรุณาเข้าสู่ระบบก่อน','err');return;}
+  if(!ALLROWS.find(r=>r.id===currentKey())){setStatus('ไม่มีข้อมูลของสัปดาห์นี้ให้ลบ','err');return;}
+  if(!canDelete()){setStatus('เฉพาะแอดมิน/เจ้าหน้าที่อำเภอเท่านั้นที่ลบได้','err');return;}
+  if(!confirm('⚠️ ลบข้อมูลสัปดาห์นี้ของ '+f_district.value+' ('+shortMonth(Number(f_month.value))+' สัปดาห์ '+f_week.value+') ทั้งรายการ?\nมีผลกับทุกหน่วยงานในสัปดาห์นี้ และย้อนกลับไม่ได้'))return;
+  $('delBtn').disabled=true;setStatus('กำลังลบ...','muted');
+  try{const d=await jsonp({action:'delete',year:f_year.value,month:f_month.value,week:f_week.value,district:f_district.value,pin:window.__PIN});
+    if(d.ok){setStatus('✓ ลบรายการเรียบร้อย','ok');await loadAll();renderSum();clearValues();markExist(false);updateLiveTotals();}
+    else setStatus('✗ '+d.error,'err');
+  }catch(e){setStatus('⚠ '+e.message,'err');}
+  finally{$('delBtn').disabled=false;}
+}
+function copyPrev(){
+  const cur=Number(f_year.value)*10000+Number(f_month.value)*100+Number(f_week.value), d=f_district.value, key=currentKey();
+  const cand=ALLROWS.filter(r=>r.district===d&&r.id!==key&&(Number(r.year)*10000+Number(r.month)*100+Number(r.week))<cur)
+    .sort((a,b)=>(Number(b.year)*10000+Number(b.month)*100+Number(b.week))-(Number(a.year)*10000+Number(a.month)*100+Number(a.week)));
+  if(!cand.length){setStatus('ไม่พบข้อมูลสัปดาห์ก่อนหน้าของอำเภอนี้','err');return;}
+  const r=cand[0];
+  scopedFields().forEach(f=>$('d_'+f).value=r[f]??0);
+  updateLiveTotals();
+  setStatus('📋 คัดลอกค่าจาก '+shortMonth(Number(r.month))+' ส.'+r.week+' มาแล้ว (ปรับแก้ได้ก่อนบันทึก)','muted');
+}
+function clearForm(){clearValues();$('d_user').value='';markExist(false);const le=$('lastEdit');if(le)le.style.display='none';setStatus('ล้างฟอร์มแล้ว','muted');}
+function canDelete(){return window.__ROLE && !window.__ROLE.agency;} /* แอดมิน/อำเภอเท่านั้น */
 function markExist(yes){
   $('existPill').innerHTML=yes
     ?'<span class="pill exist">มีข้อมูลเดิม • กำลังแก้ไข</span>'
     :'<span class="pill">รายการใหม่</span>';
+  const del=$('delBtn'); if(del) del.style.display=(yes&&canDelete())?'':'none';
+  if(!yes){const le=$('lastEdit'); if(le)le.style.display='none';}
 }
 
 /* ====== บันทึก ====== */
 async function save(){
   const pin=window.__PIN;
   if(!pin){setStatus('กรุณาเข้าสู่ระบบก่อน','err');return;}
+  if(ALLROWS.find(r=>r.id===currentKey())){
+    if(!confirm('สัปดาห์นี้มีข้อมูลอยู่แล้ว — การบันทึกจะแก้ไข"ทับ"ค่าของสัปดาห์นี้ในช่องที่คุณกรอก (ไม่ใช่บวกเพิ่ม)\nต้องการดำเนินการต่อหรือไม่?'))return;
+  }
   $('saveBtn').disabled=true;setStatus('กำลังบันทึก...','muted');
   const p={action:'save',year:f_year.value,month:f_month.value,week:f_week.value,district:f_district.value,
            user:$('d_user').value||'-',pin};
