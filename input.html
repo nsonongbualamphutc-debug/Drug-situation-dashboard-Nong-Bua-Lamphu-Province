@@ -65,6 +65,11 @@
   .histfilter{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
   .histfilter select,.histfilter input{padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;background:#fff}
   .histfilter input{flex:1;min-width:180px}
+  .hrow.active{background:#eaf4ff!important;box-shadow:inset 3px 0 0 #2f6fb0}
+  .editbanner{margin-top:12px;background:linear-gradient(180deg,#eef5ff,#e3eefb);border:1px solid #bcd6f5;color:#14457f;border-radius:11px;padding:11px 15px;font-size:.88rem;font-family:'Kanit',sans-serif}
+  .editbanner b{color:#0f2f5e}
+  .draftbar{margin-top:10px;background:#fdf6e9;border:1px solid #eed9ac;color:#8a5a10;border-radius:11px;padding:10px 15px;font-size:.84rem;font-family:'Kanit',sans-serif}
+  .draftbar a{color:#1b6fc4;cursor:pointer;font-weight:600;text-decoration:underline}
   .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
   .btnbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
   .btn{font-family:'Kanit';font-weight:600;font-size:.95rem;padding:12px 26px;border-radius:11px;border:none;cursor:pointer;transition:.15s}
@@ -183,6 +188,8 @@
       <div><label class="req">อำเภอ</label><select id="f_district"></select></div>
     </div>
     <div id="lastEdit" class="lastedit" style="display:none"></div>
+    <div id="editBanner" class="editbanner" style="display:none"></div>
+    <div id="draftBar" class="draftbar" style="display:none"></div>
   </div>
 
   <!-- ด้านปราบปราม -->
@@ -287,6 +294,8 @@ function initUI(){
   [f_year,f_month,f_week,f_district].forEach(el=>el.addEventListener('change',loadOne));
   if($('hf_dist')){$('hf_dist').innerHTML='<option value="">ทุกอำเภอ</option>'+DISTRICTS.map(d=>`<option>${d}</option>`).join('');
     $('hf_dist').addEventListener('change',renderTable);$('hf_search').addEventListener('input',renderTable);}
+  if($('tbody')&&!$('tbody')._wired){$('tbody')._wired=1;$('tbody').addEventListener('click',e=>{const tr=e.target.closest('tr[data-id]');if(tr)pickById(tr.dataset.id);});}
+  try{const u=localStorage.getItem('nbl_user');if(u&&$('d_user')&&!$('d_user').value)$('d_user').value=u;}catch(e){}
 }
 const $=id=>document.getElementById(id);
 const f_year=$('f_year'),f_month=$('f_month'),f_week=$('f_week'),f_district=$('f_district');
@@ -320,13 +329,14 @@ function renderTable(){
   if(!rows.length){$('tbody').innerHTML='<tr><td colspan="'+span+'" class="empty">— ยังไม่มีข้อมูล —</td></tr>';return;}
   const sorted=[...rows].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
   $('tbody').innerHTML=sorted.map(r=>`
-    <tr onclick='pick(${JSON.stringify(JSON.stringify(r))})'>
+    <tr data-id="${r.id}" class="hrow${r.id===window.__activeId?' active':''}">
       <td>${shortMonth(r.month)} ${r.year} • ส.${r.week}</td>
       <td>${r.district}</td>
       ${cols.map(c=>'<td>'+n(r[c])+'</td>').join('')}
       <td style="color:var(--muted)">${fmtTime(r.updatedAt)}</td>
     </tr>`).join('');
 }
+function highlightActive(){document.querySelectorAll('#tbody tr[data-id]').forEach(tr=>tr.classList.toggle('active',tr.dataset.id===window.__activeId));}
 /* ชิปยอดสะสมของปีที่เลือก (ทบยอดทุกแถวในขอบเขตสิทธิ์) */
 function renderSum(){
   const el=$('sumChips');if(!el)return;
@@ -370,23 +380,29 @@ function exportXlsx(){
   XLSX.writeFile(wb,'ประวัติสะสม-ยาเสพติด-หนองบัวลำภู-'+Date.now()+'.xlsx');
   setStatus('✓ ส่งออก Excel เรียบร้อย (นำไปเติมแล้ว import กลับได้)','ok');
 }
-function pick(js){const r=JSON.parse(JSON.parse(js));
-  f_year.value=r.year;f_month.value=r.month;f_week.value=r.week;f_district.value=r.district;
-  fillForm(r);window.scrollTo({top:0,behavior:'smooth'});}
+function pickById(id){const r=ALLROWS.find(x=>x.id===id);if(!r)return;
+  window.__activeId=id;
+  f_year.value=r.year;f_month.value=r.month;f_week.value=r.week;
+  if(!f_district.disabled)f_district.value=r.district;
+  fillForm(r);highlightActive();
+  window.scrollTo({top:0,behavior:'smooth'});
+  setStatus('📝 ดึงรายการขึ้นมาแก้ไขแล้ว — ปรับค่าแล้วกดบันทึก','muted');}
 
 /* ====== prefill จาก local (เร็ว) + ยืนยันจาก server ====== */
 function currentKey(){return [f_year.value,f_month.value,'W'+f_week.value,f_district.value].join('|');}
 async function loadOne(){
   const key=currentKey();
   const local=ALLROWS.find(r=>r.id===key);
+  window.__activeId=local?key:null;
   if(local){fillForm(local);markExist(true);}
   else{clearValues();markExist(false);}
-  updateLiveTotals();
+  updateLiveTotals();highlightActive();checkDraft();
 }
 function fillForm(r){FIELDS.forEach(f=>$('d_'+f).value=r[f]??0);
   if($('d_notesPolice'))$('d_notesPolice').value=r.notesPolice||'';
   if($('d_notesHealth'))$('d_notesHealth').value=r.notesHealth||'';
   const le=$('lastEdit'); if(le){if(r.updatedBy||r.updatedAt){le.innerHTML='✏️ แก้ไขล่าสุดโดย <b>'+(r.updatedBy||'-')+'</b> • '+fmtTime(r.updatedAt);le.style.display='inline-block';}else le.style.display='none';}
+  const eb=$('editBanner'); if(eb){eb.innerHTML='📝 กำลังแก้ไขรายการ: <b>'+r.district+'</b> • '+shortMonth(Number(r.month))+' '+r.year+' สัปดาห์ '+r.week+' — ปรับค่าแล้วกดบันทึกเพื่อทับ';eb.style.display='block';}
   markExist(true);updateLiveTotals();}
 function clearValues(){FIELDS.forEach(f=>$('d_'+f).value=0);if($('d_notesPolice'))$('d_notesPolice').value='';if($('d_notesHealth'))$('d_notesHealth').value='';updateLiveTotals&&updateLiveTotals();}
 function fieldBase(field){ /* ยอดสะสมทั้งปีของอำเภอที่เลือก (ไม่รวมสัปดาห์ที่กำลังแก้) */
@@ -408,7 +424,8 @@ function initLiveTotals(){
   FIELDS.forEach(field=>{const inp=document.getElementById('d_'+field);if(!inp||document.getElementById('h_'+field))return;
     const h=document.createElement('div');h.className='fhelp';h.id='h_'+field;
     inp.parentNode.appendChild(h);
-    inp.addEventListener('input',updateLiveTotals);});
+    inp.addEventListener('input',()=>{updateLiveTotals();saveDraft();});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save();}});});
   updateLiveTotals();
 }
 
@@ -419,7 +436,7 @@ async function delRow(){
   if(!confirm('⚠️ ลบข้อมูลสัปดาห์นี้ของ '+f_district.value+' ('+shortMonth(Number(f_month.value))+' สัปดาห์ '+f_week.value+') ทั้งรายการ?\nมีผลกับทุกหน่วยงานในสัปดาห์นี้ และย้อนกลับไม่ได้'))return;
   $('delBtn').disabled=true;setStatus('กำลังลบ...','muted');
   try{const d=await jsonp({action:'delete',year:f_year.value,month:f_month.value,week:f_week.value,district:f_district.value,pin:window.__PIN});
-    if(d.ok){setStatus('✓ ลบรายการเรียบร้อย','ok');await loadAll();renderSum();clearValues();markExist(false);updateLiveTotals();}
+    if(d.ok){clearDraftFor(currentKey());window.__activeId=null;setStatus('✓ ลบรายการเรียบร้อย','ok');await loadAll();renderSum();clearValues();markExist(false);updateLiveTotals();highlightActive();}
     else setStatus('✗ '+d.error,'err');
   }catch(e){setStatus('⚠ '+e.message,'err');}
   finally{$('delBtn').disabled=false;}
@@ -434,14 +451,35 @@ function copyPrev(){
   updateLiveTotals();
   setStatus('📋 คัดลอกค่าจาก '+shortMonth(Number(r.month))+' ส.'+r.week+' มาแล้ว (ปรับแก้ได้ก่อนบันทึก)','muted');
 }
-function clearForm(){clearValues();$('d_user').value='';markExist(false);const le=$('lastEdit');if(le)le.style.display='none';setStatus('ล้างฟอร์มแล้ว','muted');}
+function draftKey(){return 'nbl_draft_'+currentKey();}
+function saveDraft(){ if(!window.__ROLE)return;
+  const o={t:Date.now()}; scopedFields().forEach(fd=>o[fd]=$('d_'+fd).value);
+  if($('d_notesPolice'))o.notesPolice=$('d_notesPolice').value;
+  if($('d_notesHealth'))o.notesHealth=$('d_notesHealth').value;
+  try{localStorage.setItem(draftKey(),JSON.stringify(o));}catch(e){}
+  checkDraft();
+}
+function checkDraft(){ const el=$('draftBar'); if(!el)return; let o=null;
+  try{o=JSON.parse(localStorage.getItem(draftKey()));}catch(e){}
+  if(o&&o.t){el.innerHTML='💾 มีร่างที่ยังไม่บันทึกของสัปดาห์นี้ (เมื่อ '+fmtTime(new Date(o.t).toISOString())+') &nbsp;<a onclick="restoreDraft()">กู้คืน</a> &nbsp;<a onclick="discardDraft()">ทิ้งร่าง</a>';el.style.display='block';}
+  else el.style.display='none';
+}
+function restoreDraft(){ let o=null; try{o=JSON.parse(localStorage.getItem(draftKey()));}catch(e){} if(!o)return;
+  scopedFields().forEach(fd=>{if(o[fd]!==undefined)$('d_'+fd).value=o[fd];});
+  if($('d_notesPolice')&&o.notesPolice!==undefined)$('d_notesPolice').value=o.notesPolice;
+  if($('d_notesHealth')&&o.notesHealth!==undefined)$('d_notesHealth').value=o.notesHealth;
+  updateLiveTotals();$('draftBar').style.display='none';setStatus('✓ กู้คืนร่างแล้ว','ok');
+}
+function discardDraft(){ try{localStorage.removeItem(draftKey());}catch(e){} const el=$('draftBar');if(el)el.style.display='none'; }
+function clearDraftFor(key){ try{localStorage.removeItem('nbl_draft_'+key);}catch(e){} }
+function clearForm(){window.__activeId=null;clearValues();markExist(false);const le=$('lastEdit');if(le)le.style.display='none';highlightActive();setStatus('เริ่มรายการใหม่','muted');}
 function canDelete(){return window.__ROLE && !window.__ROLE.agency;} /* แอดมิน/อำเภอเท่านั้น */
 function markExist(yes){
   $('existPill').innerHTML=yes
     ?'<span class="pill exist">มีข้อมูลเดิม • กำลังแก้ไข</span>'
     :'<span class="pill">รายการใหม่</span>';
   const del=$('delBtn'); if(del) del.style.display=(yes&&canDelete())?'':'none';
-  if(!yes){const le=$('lastEdit'); if(le)le.style.display='none';}
+  if(!yes){const le=$('lastEdit'); if(le)le.style.display='none';const eb=$('editBanner');if(eb)eb.style.display='none';}
 }
 
 /* ====== บันทึก ====== */
@@ -461,8 +499,12 @@ async function save(){
   try{
     const d=await jsonp(p);
     if(d.ok){
+      try{localStorage.setItem('nbl_user',$('d_user').value||'');}catch(e){}
+      clearDraftFor(currentKey());
+      window.__activeId=currentKey();
       setStatus(d.mode==='update'?'✓ แก้ไขข้อมูลเดิมเรียบร้อย':'✓ บันทึกรายการใหม่เรียบร้อย','ok');
-      await loadAll();renderSum();markExist(true);
+      await loadAll();renderSum();markExist(true);highlightActive();
+      const db=$('draftBar');if(db)db.style.display='none';
     }else setStatus('✗ '+d.error,'err');
   }catch(e){setStatus('⚠ '+e.message,'err');}
   finally{$('saveBtn').disabled=false;}
