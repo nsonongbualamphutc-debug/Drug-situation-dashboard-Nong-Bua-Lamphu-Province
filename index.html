@@ -652,8 +652,8 @@ function buildLive2569(){
   if(!ALL.some(r=>Number(r.year)===2569))return; /* ยังไม่มีข้อมูลปี 69 → คงค่าตั้งต้น */
   DISTRICTS.forEach(d=>{const g=aggLatest(filt(2569,0,d,0));
     PLAN_ARREST[d].y69={c:g.cases,s:g.suspects,m:g.methPills,i:Math.round(g.iceGrams*100)/100};
-    PLAN_TREAT[d].p69=g.completedTreatment;
-    PLAN_TREAT[d].pct=PLAN_TREAT[d].t69?g.completedTreatment/PLAN_TREAT[d].t69*100:0;
+    PLAN_TREAT[d].p69=g.intoTreatment;
+    PLAN_TREAT[d].pct=PLAN_TREAT[d].t69?g.intoTreatment/PLAN_TREAT[d].t69*100:0;
   });
   let c=0,sp=0,m=0,i=0;DISTRICTS.forEach(d=>{const y=PLAN_ARREST[d].y69;c+=y.c;sp+=y.s;m+=y.m;i+=y.i;});
   HIST[2569].cases=c;HIST[2569].suspects=sp;HIST[2569].meth=m;HIST[2569].ice=Math.round(i*100)/100;
@@ -781,7 +781,7 @@ function kpiCards(c,p){return`<div class="kpis">
 /* ---------- เป้าหมาย ---------- */
 function goalCard(s,yearRows){
   const byD=d=>aggLatest(yearRows.filter(r=>r.district===d));
-  const dealTot=aggLatest(yearRows).dealers, treatTot=aggLatest(yearRows).completedTreatment;
+  const dealTot=aggLatest(yearRows).dealers, treatTot=aggLatest(yearRows).intoTreatment;
   const tgtDeal=s.district==='all'?TARGET_SUM.dealers:(TARGET.dealers[s.district]||0);
   const tgtTreat=s.district==='all'?TARGET_SUM.treat:(TARGET.treat[s.district]||0);
   const panel=(cat,icon,name,val,tgt,unit,fld,map)=>{
@@ -807,7 +807,7 @@ function goalCard(s,yearRows){
     <h3 style="color:var(--ink)"><span style="color:var(--enf)">${ic('flag')}</span> การดำเนินงานตามเป้าหมาย${infoDot('goal')}</h3>
     <p class="csub">เป้าตามแผน มิ.ย.–ก.ย. ${s.year} • สะสมทั้งปีงบประมาณ</p>
     ${panel('enf',ic('shield'),'จับกุมคดียาเสพติด (ข้อหาร้ายแรง)',dealTot,tgtDeal,'ราย','dealers',TARGET.dealers)}
-    ${panel('tx',ic('treat'),'การบำบัดฟื้นฟู (ผ่านการบำบัด)',treatTot,tgtTreat,'คน','completedTreatment',TARGET.treat)}
+    ${panel('tx',ic('treat'),'การบำบัดฟื้นฟู (นำผู้เสพเข้าบำบัด)',treatTot,tgtTreat,'คน','intoTreatment',TARGET.treat)}
   </div>`;
 }
 function trendCard(s){return`<div class="card">
@@ -959,7 +959,7 @@ function gaugeOne(name,val,tgt,unit){
 function gaugeGrid(s){
   s=s||window.__curS||{year:2569,month:0,week:0,district:'all'};
   const m=window.__gaugeMetric||'dealers';
-  const cfg=m==='dealers'?{tgt:TARGET.dealers,field:'dealers',unit:'ราย'}:{tgt:TARGET.treat,field:'completedTreatment',unit:'คน'};
+  const cfg=m==='dealers'?{tgt:TARGET.dealers,field:'dealers',unit:'ราย'}:{tgt:TARGET.treat,field:'intoTreatment',unit:'คน'};
   return DISTRICTS.map(d=>{const g=aggLatest(filt(s.year,s.month,d,s.week));return gaugeOne(DSHORT(d),g[cfg.field]||0,cfg.tgt[d]||0,cfg.unit);}).join('');
 }
 function setGauge(k){window.__gaugeMetric=k;document.querySelectorAll('[data-gm]').forEach(b=>b.classList.toggle('on',b.dataset.gm===k));const el=document.getElementById('gaugeGrid');if(el)el.innerHTML=gaugeGrid(window.__curS);}
