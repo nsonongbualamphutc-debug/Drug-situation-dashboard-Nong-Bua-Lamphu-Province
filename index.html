@@ -179,6 +179,26 @@
   .agchip{font-family:'Kanit';font-weight:600;font-size:.68rem;padding:2px 9px;border-radius:14px;margin-left:6px}
   .agchip.agpol{background:#fdecea;color:#b03427}
   .agchip.aghea{background:#e6f6f0;color:#0e7a55}
+  .filterbar{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(244,248,253,.97));border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin-bottom:20px;box-shadow:0 4px 18px rgba(15,29,61,.07);backdrop-filter:blur(8px)}
+  .fb-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .fb-title{font-family:'Kanit',sans-serif;font-weight:600;font-size:1rem;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fb-hint{font-family:'Sarabun',sans-serif;font-weight:400;font-size:.76rem;color:var(--muted)}
+  .fb-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .fb-reset{font-family:'Kanit',sans-serif;font-weight:600;font-size:.8rem;color:#1b4e8e;background:#eaf1fb;border:1px solid #c9d9f0;border-radius:9px;padding:7px 14px;cursor:pointer;transition:.15s}
+  .fb-reset:hover{background:#dbe8f8}
+  .fb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .fb-fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .fb-fld label{font-family:'Kanit',sans-serif;font-weight:600;font-size:.8rem;color:var(--ink2);display:flex;align-items:center;gap:5px}
+  .selwrap{position:relative}
+  .selwrap::after{content:"▾";position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#8a94a6;font-size:.85rem}
+  .selwrap select{width:100%;appearance:none;-webkit-appearance:none;padding:10px 34px 10px 13px;border:1.5px solid var(--line);border-radius:11px;background:#fff;font-family:'Kanit',sans-serif;font-weight:500;font-size:.9rem;color:var(--ink);cursor:pointer;transition:.15s}
+  .selwrap select:hover{border-color:#b9c8dd}
+  .selwrap select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,111,176,.14)}
+  .fb-summary{margin-top:12px;font-family:'Sarabun',sans-serif;font-size:.85rem;color:var(--ink2);background:#eef4fb;border:1px solid #d6e4f5;border-radius:10px;padding:9px 14px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .fb-summary b{font-family:'Kanit',sans-serif;color:#14457f;font-weight:600}
+  .fb-summary .sep{color:#b9c8dd;font-weight:700}
+  @media(max-width:720px){.fb-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:440px){.fb-grid{grid-template-columns:1fr}.filterbar{position:static}}
   .lastupd{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:4px 12px;margin-left:auto;font-family:'Kanit',sans-serif}
   .psy-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin:6px 0 16px}
   .psy-chip{flex:1;min-width:158px;border-radius:14px;padding:14px 16px;background:linear-gradient(180deg,#fff,#faf8ff);border:1px solid var(--line);display:flex;flex-direction:column;gap:1px;box-shadow:0 3px 10px rgba(15,29,61,.04)}
@@ -492,12 +512,22 @@
 </div>
 
 <div class="wrap">
-  <div class="filters"><span id="lastUpd" class="lastupd" style="display:none"></span>
-    <div class="fld"><label>ปีงบประมาณ (พ.ศ.)</label><select id="fl_year"></select></div>
-    <div class="fld"><label>ช่วงเวลา</label><select id="fl_month"></select></div>
-    <div class="fld"><label>สัปดาห์</label><select id="fl_week"></select></div>
-    <div class="fld"><label>อำเภอ</label><select id="fl_district"></select></div>
-    <span class="updtxt" id="updTxt">—</span>
+  <div class="filterbar" id="filterbar">
+    <div class="fb-top">
+      <div class="fb-title">⚙️ มุมมองข้อมูล<span class="fb-hint">เลือกช่วงเวลา/พื้นที่ เพื่อกรองทั้งแดชบอร์ด</span></div>
+      <div class="fb-actions">
+        <span id="lastUpd" class="lastupd" style="display:none"></span>
+        <span class="updtxt" id="updTxt">—</span>
+        <button class="fb-reset" onclick="resetFilters()" title="กลับค่าเริ่มต้น (ทั้งปี · ทุกอำเภอ)">↺ รีเซ็ต</button>
+      </div>
+    </div>
+    <div class="fb-grid">
+      <div class="fb-fld"><label>📅 ปีงบประมาณ</label><div class="selwrap"><select id="fl_year"></select></div></div>
+      <div class="fb-fld"><label>🗓️ ช่วงเวลา</label><div class="selwrap"><select id="fl_month"></select></div></div>
+      <div class="fb-fld"><label>📌 สัปดาห์</label><div class="selwrap"><select id="fl_week"></select></div></div>
+      <div class="fb-fld"><label>📍 อำเภอ</label><div class="selwrap"><select id="fl_district"></select></div></div>
+    </div>
+    <div class="fb-summary" id="fbSummary"></div>
   </div>
 
   <div id="content">
@@ -701,6 +731,15 @@ if(typeof document!=='undefined'&&document.addEventListener){
   document.addEventListener('click',function(e){if(e.target&&e.target.closest&&!e.target.closest('.infodot'))hideTip();});
   document.addEventListener('scroll',function(){hideTip();},true);
 }
+function resetFilters(){
+  const fy=document.getElementById('fl_year');
+  let hit=false; for(const o of fy.options){if(o.value==='2569'){fy.value='2569';hit=true;break;}}
+  if(!hit&&fy.options.length)fy.selectedIndex=0;
+  document.getElementById('fl_month').value='0';
+  document.getElementById('fl_week').value='0';
+  document.getElementById('fl_district').value='all';
+  render();
+}
 function render(){
   if(!document.getElementById('fl_year').options.length)buildFilters();
   const s=sel();
@@ -718,6 +757,11 @@ function render(){
 
   window.__curS=s;
   buildLive2569();
+  (function(){const el=document.getElementById('fbSummary');if(!el)return;
+    const mL=(!s.month||s.month===0)?'ทั้งปี (สะสมทุกเดือน)':('เดือน'+SM[s.month]);
+    const wL=(!s.week||s.week===0)?'รวมทุกสัปดาห์':('สัปดาห์ '+s.week);
+    const dL=(s.district==='all')?'ทุกอำเภอ (รวมทั้งจังหวัด)':('อำเภอ'+s.district);
+    el.innerHTML='📊 กำลังแสดง: <b>ปีงบ '+s.year+'</b><span class="sep">•</span><b>'+mL+'</b><span class="sep">•</span><b>'+wL+'</b><span class="sep">•</span><b>'+dL+'</b>';})();
   (function(){const el=document.getElementById('lastUpd');if(!el)return;
     let mx='';ALL.forEach(r=>{if(r.updatedAt&&String(r.updatedAt)>mx)mx=String(r.updatedAt);});
     if(mx){try{const d=new Date(mx);el.textContent='🕐 ข้อมูลอัปเดตล่าสุด '+d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.';el.style.display='inline-flex';}catch(e){}}
