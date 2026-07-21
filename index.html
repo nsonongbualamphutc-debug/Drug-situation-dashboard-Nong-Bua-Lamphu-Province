@@ -37,6 +37,34 @@
     --muted:#8b97ae; --gold:#e0b75e;
     --shadow:0 1px 2px rgba(0,0,0,.35),0 14px 34px rgba(0,0,0,.4);
   }
+  /* ===== override โหมดมืด: คอมโพเนนต์ที่เคยใช้สีสว่างติดตาย ===== */
+  [data-theme="dark"] .k-val,[data-theme="dark"] .k-val .cnt{color:var(--ink)}
+  [data-theme="dark"] .filterbar{background:linear-gradient(180deg,#15213a,#0f1a2e)}
+  [data-theme="dark"] .selwrap select{background:#0f1a2e;color:var(--ink);border-color:var(--line)}
+  [data-theme="dark"] .selwrap select option{background:#0f1a2e;color:var(--ink)}
+  [data-theme="dark"] .selwrap::after{color:#7c8aa6}
+  [data-theme="dark"] .selwrap select:hover{border-color:#3a4a66}
+  [data-theme="dark"] .fb-reset{background:#1a2b47;color:#bcd2f0;border-color:#2c405f}
+  [data-theme="dark"] .fb-reset:hover{background:#22375a}
+  [data-theme="dark"] .fb-summary{background:#14213a;border-color:#26324c;color:var(--ink2)}
+  [data-theme="dark"] .fb-summary b{color:#9cc2f0}
+  [data-theme="dark"] .fb-summary .sep{color:#3a4a66}
+  [data-theme="dark"] .g2{background:linear-gradient(180deg,#17233d,#131d33)}
+  [data-theme="dark"] .g2-bar,[data-theme="dark"] .g2-dt{background:#0d1729}
+  [data-theme="dark"] .g2-d{background:#141f38;border-color:#26324c}
+  [data-theme="dark"] .psy-chip{background:linear-gradient(180deg,#17233d,#131d33)}
+  [data-theme="dark"] .psy-chip.s1 b{color:#a78bdf}
+  [data-theme="dark"] .psy-chip.s2 b{color:#e8705f}
+  [data-theme="dark"] .psy-arrow{color:#3a4a66}
+  [data-theme="dark"] .psytbl th,[data-theme="dark"] .psytbl tfoot td{background:#241b3a;color:#c3aef0;border-color:#3a2f57}
+  [data-theme="dark"] .psytbl tbody tr:hover{background:#1c1733}
+  [data-theme="dark"] .psytbl td.pd{color:var(--ink)}
+  [data-theme="dark"] .gauge{background:linear-gradient(180deg,#17233d,#121c30)}
+  [data-theme="dark"] .agchip.agpol{background:#37201d;color:#f0a89e}
+  [data-theme="dark"] .agchip.aghea{background:#123024;color:#8fe0bb}
+  [data-theme="dark"] .lastupd{background:#14213a;border-color:#26324c;color:var(--muted)}
+  [data-theme="dark"] .dtbl .dname{color:var(--ink)}
+  [data-theme="dark"] .heroclock{color:#e6cf97;background:rgba(216,166,74,.12);border-color:rgba(216,166,74,.3)}
   *{box-sizing:border-box}
   body{margin:0;background:linear-gradient(180deg,var(--soft),var(--bg)) fixed;font-family:'Sarabun',sans-serif;color:var(--ink);transition:.3s background,.3s color}
   .wrap{max-width:1360px;margin:0 auto;padding:0 18px 72px}
@@ -199,6 +227,12 @@
   .fb-summary .sep{color:#b9c8dd;font-weight:700}
   @media(max-width:720px){.fb-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:440px){.fb-grid{grid-template-columns:1fr}.filterbar{position:static}}
+  .heroclock{margin-top:7px;display:inline-flex;align-items:center;font-family:'Kanit',sans-serif;font-weight:500;font-size:.8rem;color:#d9c99a;background:rgba(216,166,74,.13);border:1px solid rgba(216,166,74,.35);border-radius:20px;padding:4px 14px;letter-spacing:.2px}
+  #content .card{transition:transform .22s ease,box-shadow .22s ease}
+  #content .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(15,29,61,.12)}
+  .rvl{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+  .rvl.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion: reduce){.rvl{opacity:1;transform:none;transition:none}#content .card{transition:none}}
   .lastupd{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:4px 12px;margin-left:auto;font-family:'Kanit',sans-serif}
   .psy-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin:6px 0 16px}
   .psy-chip{flex:1;min-width:158px;border-radius:14px;padding:14px 16px;background:linear-gradient(180deg,#fff,#faf8ff);border:1px solid var(--line);display:flex;flex-direction:column;gap:1px;box-shadow:0 3px 10px rgba(15,29,61,.04)}
@@ -482,6 +516,7 @@
     <div class="htxt">
       <h1>ศูนย์ข้อมูลสถานการณ์ยาเสพติด จังหวัดหนองบัวลำภู</h1>
       <p><span id="sh_shield"></span> ศอ.ปส.จ.นภ. • รายงานสถานการณ์รายสัปดาห์ตามแผนปฏิบัติการ (Action Plan)</p>
+      <div class="heroclock" id="heroClock">—</div>
     </div>
     <div class="htools">
       <span class="live"><span class="pulse"></span><span id="liveTxt">กำลังเชื่อมต่อ…</span></span>
@@ -731,6 +766,18 @@ if(typeof document!=='undefined'&&document.addEventListener){
   document.addEventListener('click',function(e){if(e.target&&e.target.closest&&!e.target.closest('.infodot'))hideTip();});
   document.addEventListener('scroll',function(){hideTip();},true);
 }
+/* ===== ลูกเล่นความเคลื่อนไหว (นับเลข/ไล่โผล่/นาฬิกา) ===== */
+function runReveal(){
+  if(typeof IntersectionObserver==='undefined'||!document.querySelectorAll)return;
+  if(!window.__rvObs){window.__rvObs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');window.__rvObs.unobserve(e.target);}}),{threshold:.08});}
+  document.querySelectorAll('#content .card:not(.rvl),#content .sechead:not(.rvl)').forEach(el=>{el.classList.add('rvl');window.__rvObs.observe(el);});
+}
+function tickClock(){
+  const el=document.getElementById('heroClock');if(!el)return;
+  const d=new Date();
+  el.textContent='🕐 '+d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' • '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' น.';
+}
+try{tickClock();if(typeof setInterval==='function')setInterval(tickClock,1000);}catch(e){}
 function resetFilters(){
   const fy=document.getElementById('fl_year');
   let hit=false; for(const o of fy.options){if(o.value==='2569'){fy.value='2569';hit=true;break;}}
@@ -762,6 +809,7 @@ function render(){
     const wL=(!s.week||s.week===0)?'รวมทุกสัปดาห์':('สัปดาห์ '+s.week);
     const dL=(s.district==='all')?'ทุกอำเภอ (รวมทั้งจังหวัด)':('อำเภอ'+s.district);
     el.innerHTML='📊 กำลังแสดง: <b>ปีงบ '+s.year+'</b><span class="sep">•</span><b>'+mL+'</b><span class="sep">•</span><b>'+wL+'</b><span class="sep">•</span><b>'+dL+'</b>';})();
+  if(typeof setTimeout==='function'){setTimeout(runReveal,60);}
   (function(){const el=document.getElementById('lastUpd');if(!el)return;
     let mx='';ALL.forEach(r=>{if(r.updatedAt&&String(r.updatedAt)>mx)mx=String(r.updatedAt);});
     if(mx){try{const d=new Date(mx);el.textContent='🕐 ข้อมูลอัปเดตล่าสุด '+d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.';el.style.display='inline-flex';}catch(e){}}

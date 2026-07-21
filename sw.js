@@ -1,7 +1,7 @@
 /* Service Worker — แดชบอร์ดยาเสพติด นภ.
    กลยุทธ์: network-first (เอาของใหม่จากเน็ตก่อนเสมอ) ถ้าออฟไลน์ค่อยใช้แคช
    *** เลื่อนเลขเวอร์ชันทุกครั้งที่อยากบังคับล้างแคชเก่า *** */
-const CACHE = 'nbl-drug-v4';
+const CACHE = 'nbl-drug-v5';
 const SHELL = ['./','./index.html','./input.html','./import.html',
   './manifest.json','./icon-192.png','./icon-512.png','./favicon.png'];
 
